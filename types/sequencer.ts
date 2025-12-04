@@ -66,3 +66,50 @@ export function createDefaultInstrumentParams(): InstrumentParamMap {
     synth: { pitch: 0, decay: 0.8, timbre: 0.5 },
   };
 }
+
+// Collaboration types for real-time room sync
+export type RoomId = string; // Short, URL-friendly code (e.g., "abc123")
+
+export type Participant = {
+  id: string; // Client-generated UUID
+  name?: string; // Optional display name
+  joinedAt: number; // Timestamp
+};
+
+export type RoomState = {
+  id: RoomId;
+  pattern: Pattern;
+  transport: TransportState;
+  instruments: InstrumentParamMap;
+  participants: Participant[];
+  createdAt: number;
+  lastActivity: number;
+};
+
+export type SyncMessage =
+  | { type: "step_toggle"; row: number; col: number; userId: string; timestamp: number }
+  | { type: "transport_play"; userId: string; timestamp: number }
+  | { type: "transport_pause"; userId: string; timestamp: number }
+  | { type: "tempo_change"; tempo: number; userId: string; timestamp: number }
+  | { type: "range_change"; startStep: number; endStep: number; userId: string; timestamp: number }
+  | {
+      type: "instrument_param";
+      id: InstrumentId;
+      field: "pitch" | "decay" | "timbre";
+      value: number;
+      userId: string;
+      timestamp: number;
+    }
+  | { type: "participant_join"; participant: Participant }
+  | { type: "participant_leave"; participantId: string }
+  | { type: "full_sync"; state: RoomState }; // Initial sync on join
+
+// Generate a random room ID (6 alphanumeric characters)
+export function generateRoomId(): RoomId {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
+  for (let i = 0; i < 6; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}

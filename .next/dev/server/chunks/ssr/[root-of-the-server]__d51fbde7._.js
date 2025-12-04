@@ -256,6 +256,433 @@ function triggerInstrument(id, synth, params, tone, time) {
     }
 }
 }),
+"[project]/lib/supabase.ts [app-ssr] (ecmascript)", ((__turbopack_context__) => {
+"use strict";
+
+// Supabase client setup for real-time collaboration.
+// In production, these should be environment variables.
+__turbopack_context__.s([
+    "supabase",
+    ()=>supabase
+]);
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$supabase$2f$supabase$2d$js$2f$dist$2f$esm$2f$wrapper$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/@supabase/supabase-js/dist/esm/wrapper.mjs [app-ssr] (ecmascript)");
+;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn("Supabase credentials not found. Collaboration features will not work. " + "Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables.");
+}
+const supabase = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$supabase$2f$supabase$2d$js$2f$dist$2f$esm$2f$wrapper$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["createClient"])(supabaseUrl, supabaseAnonKey, {
+    realtime: {
+        params: {
+            eventsPerSecond: 10
+        }
+    }
+});
+}),
+"[project]/app/hooks/useRoomSync.ts [app-ssr] (ecmascript)", ((__turbopack_context__) => {
+"use strict";
+
+// Real-time room synchronization hook using Supabase Realtime.
+// Manages room state, broadcasts local changes, and merges remote updates.
+__turbopack_context__.s([
+    "useRoomSync",
+    ()=>useRoomSync
+]);
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$supabase$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/supabase.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/types/sequencer.ts [app-ssr] (ecmascript)");
+"use client";
+;
+;
+;
+// Generate a unique user ID for this session (stored in localStorage)
+function getUserId() {
+    const stored = ("TURBOPACK compile-time falsy", 0) ? "TURBOPACK unreachable" : null;
+    if ("TURBOPACK compile-time falsy", 0) //TURBOPACK unreachable
+    ;
+    const newId = `user_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    if ("TURBOPACK compile-time falsy", 0) //TURBOPACK unreachable
+    ;
+    return newId;
+}
+function useRoomSync(roomId) {
+    const [roomState, setRoomState] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
+    const [isConnected, setIsConnected] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [isLoading, setIsLoading] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [error, setError] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
+    const channelRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRef"])(null);
+    const userIdRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRef"])(getUserId());
+    const isLocalChangeRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRef"])(false); // Flag to prevent feedback loops
+    // Initialize room connection
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        if (!roomId) {
+            // Solo mode: no room sync
+            setRoomState(null);
+            setIsConnected(false);
+            setIsLoading(false);
+            return;
+        }
+        setIsLoading(true);
+        setError(null);
+        const channel = __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$supabase$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["supabase"].channel(`room:${roomId}`, {
+            config: {
+                presence: {
+                    key: userIdRef.current
+                }
+            }
+        });
+        // Subscribe to sync messages
+        channel.on("broadcast", {
+            event: "sync"
+        }, (payload)=>{
+            const message = payload.payload;
+            // Ignore our own messages (prevent feedback loops)
+            if (message.userId === userIdRef.current && isLocalChangeRef.current) {
+                isLocalChangeRef.current = false;
+                return;
+            }
+            handleRemoteMessage(message);
+        }).on("presence", {
+            event: "sync"
+        }, ()=>{
+            // Update participants list from presence
+            const presence = channel.presenceState();
+            const participants = Object.values(presence).flat().map((p)=>p);
+            setRoomState((prev)=>prev ? {
+                    ...prev,
+                    participants
+                } : null);
+        }).on("presence", {
+            event: "join"
+        }, ({ key, newPresences })=>{
+            // New participant joined
+            const newParticipant = newPresences[0];
+            if (newParticipant && newParticipant.id !== userIdRef.current) {
+                // Send full sync to new participant
+                if (roomState) {
+                    broadcastMessage({
+                        type: "full_sync",
+                        state: roomState
+                    });
+                }
+            }
+        }).subscribe((status)=>{
+            setIsConnected(status === "SUBSCRIBED");
+            setIsLoading(false);
+            if (status === "SUBSCRIBED") {
+                // Join presence
+                const participant = {
+                    id: userIdRef.current,
+                    joinedAt: Date.now()
+                };
+                channel.track(participant);
+                // Fetch or create room state
+                fetchOrCreateRoom(roomId).then((state)=>{
+                    if (state) {
+                        setRoomState(state);
+                        // Broadcast full sync to other participants
+                        broadcastMessage({
+                            type: "full_sync",
+                            state
+                        });
+                    }
+                });
+            }
+        });
+        channelRef.current = channel;
+        return ()=>{
+            channel.unsubscribe();
+            channelRef.current = null;
+        };
+    }, [
+        roomId
+    ]);
+    // Fetch room from Supabase or create default
+    const fetchOrCreateRoom = async (id)=>{
+        try {
+            const { data, error: fetchError } = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$supabase$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["supabase"].from("rooms").select("*").eq("id", id).single();
+            if (fetchError && fetchError.code !== "PGRST116") {
+                // PGRST116 = not found, which is fine (we'll create)
+                console.error("Error fetching room:", fetchError);
+                setError("Failed to load room");
+                return null;
+            }
+            if (data) {
+                // Room exists, return it
+                return {
+                    id: data.id,
+                    pattern: data.pattern,
+                    transport: data.transport,
+                    instruments: data.instruments,
+                    participants: [],
+                    createdAt: new Date(data.created_at).getTime(),
+                    lastActivity: new Date(data.last_activity).getTime()
+                };
+            }
+            // Room doesn't exist, create default
+            const newState = {
+                id,
+                pattern: (0, __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["createEmptyPattern"])(),
+                transport: (0, __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["createDefaultTransport"])(),
+                instruments: (0, __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["createDefaultInstrumentParams"])(),
+                participants: [],
+                createdAt: Date.now(),
+                lastActivity: Date.now()
+            };
+            // Save to Supabase
+            const { error: insertError } = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$supabase$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["supabase"].from("rooms").insert({
+                id: newState.id,
+                pattern: newState.pattern,
+                transport: newState.transport,
+                instruments: newState.instruments,
+                created_at: new Date(newState.createdAt).toISOString(),
+                last_activity: new Date(newState.lastActivity).toISOString()
+            });
+            if (insertError) {
+                console.error("Error creating room:", insertError);
+                setError("Failed to create room");
+                return null;
+            }
+            return newState;
+        } catch (err) {
+            console.error("Unexpected error in fetchOrCreateRoom:", err);
+            setError("Unexpected error");
+            return null;
+        }
+    };
+    // Broadcast a sync message to the room
+    const broadcastMessage = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useCallback"])((message)=>{
+        const channel = channelRef.current;
+        if (!channel) return;
+        channel.send({
+            type: "broadcast",
+            event: "sync",
+            payload: message
+        });
+    }, []);
+    // Handle incoming remote sync messages
+    const handleRemoteMessage = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useCallback"])((message)=>{
+        setRoomState((prev)=>{
+            if (!prev) return prev;
+            switch(message.type){
+                case "step_toggle":
+                    {
+                        const nextPattern = prev.pattern.map((r)=>r.map((s)=>({
+                                    ...s
+                                })));
+                        const step = nextPattern[message.row]?.[message.col];
+                        if (step) {
+                            step.active = !step.active;
+                        }
+                        return {
+                            ...prev,
+                            pattern: nextPattern,
+                            lastActivity: message.timestamp
+                        };
+                    }
+                case "transport_play":
+                    return {
+                        ...prev,
+                        transport: {
+                            ...prev.transport,
+                            isPlaying: true
+                        },
+                        lastActivity: message.timestamp
+                    };
+                case "transport_pause":
+                    return {
+                        ...prev,
+                        transport: {
+                            ...prev.transport,
+                            isPlaying: false,
+                            currentStep: prev.transport.startStep
+                        },
+                        lastActivity: message.timestamp
+                    };
+                case "tempo_change":
+                    return {
+                        ...prev,
+                        transport: {
+                            ...prev.transport,
+                            tempo: message.tempo
+                        },
+                        lastActivity: message.timestamp
+                    };
+                case "range_change":
+                    return {
+                        ...prev,
+                        transport: {
+                            ...prev.transport,
+                            startStep: message.startStep,
+                            endStep: message.endStep
+                        },
+                        lastActivity: message.timestamp
+                    };
+                case "instrument_param":
+                    {
+                        const nextInstruments = {
+                            ...prev.instruments,
+                            [message.id]: {
+                                ...prev.instruments[message.id],
+                                [message.field]: message.value
+                            }
+                        };
+                        return {
+                            ...prev,
+                            instruments: nextInstruments,
+                            lastActivity: message.timestamp
+                        };
+                    }
+                case "full_sync":
+                    return message.state;
+                default:
+                    return prev;
+            }
+        });
+    }, []);
+    // Update pattern (optimistic update + broadcast)
+    const updatePattern = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useCallback"])((pattern)=>{
+        setRoomState((prev)=>{
+            if (!prev) return prev;
+            return {
+                ...prev,
+                pattern,
+                lastActivity: Date.now()
+            };
+        });
+        if (roomId) {
+            isLocalChangeRef.current = true;
+        // Note: We broadcast individual step toggles, not full pattern
+        // This is handled by toggleStep below
+        }
+    }, [
+        roomId
+    ]);
+    // Toggle a single step (optimistic + broadcast)
+    const toggleStep = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useCallback"])((row, col)=>{
+        setRoomState((prev)=>{
+            if (!prev) return prev;
+            const nextPattern = prev.pattern.map((r)=>r.map((s)=>({
+                        ...s
+                    })));
+            const step = nextPattern[row]?.[col];
+            if (step) {
+                step.active = !step.active;
+            }
+            return {
+                ...prev,
+                pattern: nextPattern,
+                lastActivity: Date.now()
+            };
+        });
+        if (roomId) {
+            isLocalChangeRef.current = true;
+            broadcastMessage({
+                type: "step_toggle",
+                row,
+                col,
+                userId: userIdRef.current,
+                timestamp: Date.now()
+            });
+        }
+    }, [
+        roomId,
+        broadcastMessage
+    ]);
+    // Update transport (optimistic + broadcast)
+    const updateTransport = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useCallback"])((transport)=>{
+        setRoomState((prev)=>{
+            if (!prev) return prev;
+            return {
+                ...prev,
+                transport: {
+                    ...prev.transport,
+                    ...transport
+                },
+                lastActivity: Date.now()
+            };
+        });
+        if (roomId) {
+            isLocalChangeRef.current = true;
+            if (transport.isPlaying !== undefined) {
+                broadcastMessage({
+                    type: transport.isPlaying ? "transport_play" : "transport_pause",
+                    userId: userIdRef.current,
+                    timestamp: Date.now()
+                });
+            }
+            if (transport.tempo !== undefined) {
+                broadcastMessage({
+                    type: "tempo_change",
+                    tempo: transport.tempo,
+                    userId: userIdRef.current,
+                    timestamp: Date.now()
+                });
+            }
+            if (transport.startStep !== undefined || transport.endStep !== undefined) {
+                const currentState = roomState || {
+                    transport: (0, __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["createDefaultTransport"])()
+                };
+                broadcastMessage({
+                    type: "range_change",
+                    startStep: transport.startStep ?? currentState.transport.startStep,
+                    endStep: transport.endStep ?? currentState.transport.endStep,
+                    userId: userIdRef.current,
+                    timestamp: Date.now()
+                });
+            }
+        }
+    }, [
+        roomId,
+        broadcastMessage,
+        roomState
+    ]);
+    // Update instrument parameter (optimistic + broadcast)
+    const updateInstrumentParam = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useCallback"])((id, field, value)=>{
+        setRoomState((prev)=>{
+            if (!prev) return prev;
+            const nextInstruments = {
+                ...prev.instruments,
+                [id]: {
+                    ...prev.instruments[id],
+                    [field]: value
+                }
+            };
+            return {
+                ...prev,
+                instruments: nextInstruments,
+                lastActivity: Date.now()
+            };
+        });
+        if (roomId) {
+            isLocalChangeRef.current = true;
+            broadcastMessage({
+                type: "instrument_param",
+                id,
+                field,
+                value,
+                userId: userIdRef.current,
+                timestamp: Date.now()
+            });
+        }
+    }, [
+        roomId,
+        broadcastMessage
+    ]);
+    return {
+        roomState,
+        isConnected,
+        participants: roomState?.participants || [],
+        isLoading,
+        error,
+        updatePattern,
+        updateTransport,
+        updateInstrumentParam,
+        toggleStep
+    };
+}
+}),
 "[project]/components/TransportControls.tsx [app-ssr] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
@@ -720,6 +1147,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/types/sequencer.ts [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$hooks$2f$useToneEngine$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/app/hooks/useToneEngine.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$hooks$2f$useRoomSync$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/app/hooks/useRoomSync.ts [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$TransportControls$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/TransportControls.tsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$PatternGrid$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/PatternGrid.tsx [app-ssr] (ecmascript)");
 "use client";
@@ -729,33 +1157,122 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$PatternGrid$2e
 ;
 ;
 ;
+;
 function SequencerPage() {
-    const [pattern, setPattern] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(()=>(0, __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["createEmptyPattern"])());
-    const [instrumentParams, setInstrumentParams] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(()=>(0, __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["createDefaultInstrumentParams"])());
-    const engine = (0, __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$hooks$2f$useToneEngine$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useToneEngine"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["createDefaultTransport"])(), pattern, instrumentParams);
+    // Room management: null = solo mode, string = room ID
+    const [roomId, setRoomId] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
+    // Local state for solo mode (when roomId is null)
+    const [localPattern, setLocalPattern] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(()=>(0, __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["createEmptyPattern"])());
+    const [localInstrumentParams, setLocalInstrumentParams] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(()=>(0, __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["createDefaultInstrumentParams"])());
+    // Room sync hook (only active when roomId is set)
+    const roomSync = (0, __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$hooks$2f$useRoomSync$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRoomSync"])(roomId);
+    // Determine which state to use: room sync or local
+    const pattern = roomId && roomSync.roomState ? roomSync.roomState.pattern : localPattern;
+    const instrumentParams = roomId && roomSync.roomState ? roomSync.roomState.instruments : localInstrumentParams;
+    const transport = roomId && roomSync.roomState ? roomSync.roomState.transport : (0, __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["createDefaultTransport"])();
+    // Tone engine uses current pattern/params
+    const engine = (0, __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$hooks$2f$useToneEngine$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useToneEngine"])(transport, pattern, instrumentParams);
+    // Sync room state changes to Tone engine
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        if (roomId && roomSync.roomState) {
+            engine.updatePattern(roomSync.roomState.pattern);
+            engine.updateInstrumentParams(roomSync.roomState.instruments);
+        }
+    }, [
+        roomId,
+        roomSync.roomState,
+        engine
+    ]);
+    // Sync transport changes from room
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        if (roomId && roomSync.roomState) {
+            const roomTransport = roomSync.roomState.transport;
+            if (roomTransport.tempo !== engine.transport.tempo) {
+                engine.setTempo(roomTransport.tempo);
+            }
+            if (roomTransport.startStep !== engine.transport.startStep || roomTransport.endStep !== engine.transport.endStep) {
+                engine.setRange(roomTransport.startStep, roomTransport.endStep);
+            }
+            if (roomTransport.isPlaying !== engine.transport.isPlaying) {
+                if (roomTransport.isPlaying && !engine.transport.isPlaying) {
+                    engine.togglePlay();
+                } else if (!roomTransport.isPlaying && engine.transport.isPlaying) {
+                    engine.togglePlay();
+                }
+            }
+        }
+    }, [
+        roomId,
+        roomSync.roomState,
+        engine
+    ]);
     const handleToggleStep = (row, col)=>{
-        setPattern((prev)=>{
-            const next = prev.map((r)=>r.map((s)=>({
-                        ...s
-                    })));
-            next[row][col].active = !next[row][col].active;
-            engine.updatePattern(next);
-            return next;
-        });
+        if (roomId) {
+            // Use room sync
+            roomSync.toggleStep(row, col);
+        } else {
+            // Local solo mode
+            setLocalPattern((prev)=>{
+                const next = prev.map((r)=>r.map((s)=>({
+                            ...s
+                        })));
+                next[row][col].active = !next[row][col].active;
+                engine.updatePattern(next);
+                return next;
+            });
+        }
     };
     const handleInstrumentParamsChange = (id, field, value)=>{
-        setInstrumentParams((prev)=>{
-            const next = {
-                ...prev,
-                [id]: {
-                    ...prev[id],
-                    [field]: value
-                }
-            };
-            engine.updateInstrumentParams(next);
-            return next;
-        });
+        if (roomId) {
+            // Use room sync
+            roomSync.updateInstrumentParam(id, field, value);
+        } else {
+            // Local solo mode
+            setLocalInstrumentParams((prev)=>{
+                const next = {
+                    ...prev,
+                    [id]: {
+                        ...prev[id],
+                        [field]: value
+                    }
+                };
+                engine.updateInstrumentParams(next);
+                return next;
+            });
+        }
     };
+    const handleTransportChange = {
+        tempo: (tempo)=>{
+            if (roomId) {
+                roomSync.updateTransport({
+                    tempo
+                });
+            } else {
+                engine.setTempo(tempo);
+            }
+        },
+        range: (startStep, endStep)=>{
+            if (roomId) {
+                roomSync.updateTransport({
+                    startStep,
+                    endStep
+                });
+            } else {
+                engine.setRange(startStep, endStep);
+            }
+        },
+        togglePlay: async ()=>{
+            if (roomId) {
+                const currentPlaying = engine.transport.isPlaying;
+                roomSync.updateTransport({
+                    isPlaying: !currentPlaying
+                });
+            } else {
+                await engine.togglePlay();
+            }
+        }
+    };
+    ;
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
         className: "flex flex-1 flex-col gap-4",
         children: [
@@ -769,7 +1286,7 @@ function SequencerPage() {
                                 children: "Intersymmetric Works"
                             }, void 0, false, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 59,
+                                lineNumber: 143,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
@@ -777,13 +1294,13 @@ function SequencerPage() {
                                 children: "Sequencer 01"
                             }, void 0, false, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 62,
+                                lineNumber: 146,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 58,
+                        lineNumber: 142,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -793,7 +1310,7 @@ function SequencerPage() {
                                 children: "Room Code:"
                             }, void 0, false, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 67,
+                                lineNumber: 151,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -801,19 +1318,19 @@ function SequencerPage() {
                                 children: "solo"
                             }, void 0, false, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 68,
+                                lineNumber: 152,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 66,
+                        lineNumber: 150,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 57,
+                lineNumber: 141,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
@@ -830,7 +1347,7 @@ function SequencerPage() {
                         onTogglePlay: engine.togglePlay
                     }, void 0, false, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 73,
+                        lineNumber: 157,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$PatternGrid$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["PatternGrid"], {
@@ -841,7 +1358,7 @@ function SequencerPage() {
                         onInstrumentParamChange: handleInstrumentParamsChange
                     }, void 0, false, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 84,
+                        lineNumber: 168,
                         columnNumber: 9
                     }, this),
                     !engine.ready && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -849,52 +1366,23 @@ function SequencerPage() {
                         children: "Audio engine is loading in the background. You can already draw a pattern; sound will start once it is ready."
                     }, void 0, false, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 93,
+                        lineNumber: 177,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 72,
+                lineNumber: 156,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/app/page.tsx",
-        lineNumber: 56,
+        lineNumber: 140,
         columnNumber: 5
     }, this);
 }
 }),
-"[project]/node_modules/next/dist/server/route-modules/app-page/module.compiled.js [app-ssr] (ecmascript)", ((__turbopack_context__, module, exports) => {
-"use strict";
-
-if ("TURBOPACK compile-time falsy", 0) //TURBOPACK unreachable
-;
-else {
-    if ("TURBOPACK compile-time falsy", 0) //TURBOPACK unreachable
-    ;
-    else {
-        if ("TURBOPACK compile-time truthy", 1) {
-            if ("TURBOPACK compile-time truthy", 1) {
-                module.exports = __turbopack_context__.r("[externals]/next/dist/compiled/next-server/app-page-turbo.runtime.dev.js [external] (next/dist/compiled/next-server/app-page-turbo.runtime.dev.js, cjs)");
-            } else //TURBOPACK unreachable
-            ;
-        } else //TURBOPACK unreachable
-        ;
-    }
-} //# sourceMappingURL=module.compiled.js.map
-}),
-"[project]/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.js [app-ssr] (ecmascript)", ((__turbopack_context__, module, exports) => {
-"use strict";
-
-module.exports = __turbopack_context__.r("[project]/node_modules/next/dist/server/route-modules/app-page/module.compiled.js [app-ssr] (ecmascript)").vendored['react-ssr'].ReactJsxDevRuntime; //# sourceMappingURL=react-jsx-dev-runtime.js.map
-}),
-"[project]/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)", ((__turbopack_context__, module, exports) => {
-"use strict";
-
-module.exports = __turbopack_context__.r("[project]/node_modules/next/dist/server/route-modules/app-page/module.compiled.js [app-ssr] (ecmascript)").vendored['react-ssr'].React; //# sourceMappingURL=react.js.map
-}),
 ];
 
-//# sourceMappingURL=%5Broot-of-the-server%5D__f0bf467c._.js.map
+//# sourceMappingURL=%5Broot-of-the-server%5D__d51fbde7._.js.map

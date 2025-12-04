@@ -323,6 +323,491 @@ if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelper
     __turbopack_context__.k.registerExports(__turbopack_context__.m, globalThis.$RefreshHelpers$);
 }
 }),
+"[project]/lib/supabase.ts [app-client] (ecmascript)", ((__turbopack_context__) => {
+"use strict";
+
+// Supabase client setup for real-time collaboration.
+// In production, these should be environment variables.
+__turbopack_context__.s([
+    "supabase",
+    ()=>supabase
+]);
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$polyfills$2f$process$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = /*#__PURE__*/ __turbopack_context__.i("[project]/node_modules/next/dist/build/polyfills/process.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$supabase$2f$supabase$2d$js$2f$dist$2f$esm$2f$wrapper$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/@supabase/supabase-js/dist/esm/wrapper.mjs [app-client] (ecmascript)");
+;
+const supabaseUrl = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$polyfills$2f$process$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].env.NEXT_PUBLIC_SUPABASE_URL || "";
+const supabaseAnonKey = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$polyfills$2f$process$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn("Supabase credentials not found. Collaboration features will not work. " + "Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables.");
+}
+const supabase = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$supabase$2f$supabase$2d$js$2f$dist$2f$esm$2f$wrapper$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["createClient"])(supabaseUrl, supabaseAnonKey, {
+    realtime: {
+        params: {
+            eventsPerSecond: 10
+        }
+    }
+});
+if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
+    __turbopack_context__.k.registerExports(__turbopack_context__.m, globalThis.$RefreshHelpers$);
+}
+}),
+"[project]/app/hooks/useRoomSync.ts [app-client] (ecmascript)", ((__turbopack_context__) => {
+"use strict";
+
+// Real-time room synchronization hook using Supabase Realtime.
+// Manages room state, broadcasts local changes, and merges remote updates.
+__turbopack_context__.s([
+    "useRoomSync",
+    ()=>useRoomSync
+]);
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$supabase$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/supabase.ts [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/types/sequencer.ts [app-client] (ecmascript)");
+var _s = __turbopack_context__.k.signature();
+"use client";
+;
+;
+;
+// Generate a unique user ID for this session (stored in localStorage)
+function getUserId() {
+    const stored = ("TURBOPACK compile-time truthy", 1) ? localStorage.getItem("sequencer_user_id") : "TURBOPACK unreachable";
+    if (stored) return stored;
+    const newId = `user_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    if ("TURBOPACK compile-time truthy", 1) {
+        localStorage.setItem("sequencer_user_id", newId);
+    }
+    return newId;
+}
+function useRoomSync(roomId) {
+    _s();
+    const [roomState, setRoomState] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
+    const [isConnected, setIsConnected] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [isLoading, setIsLoading] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [error, setError] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
+    const channelRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"])(null);
+    const userIdRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"])(getUserId());
+    const isLocalChangeRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"])(false); // Flag to prevent feedback loops
+    // Initialize room connection
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "useRoomSync.useEffect": ()=>{
+            if (!roomId) {
+                // Solo mode: no room sync
+                setRoomState(null);
+                setIsConnected(false);
+                setIsLoading(false);
+                return;
+            }
+            setIsLoading(true);
+            setError(null);
+            const channel = __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$supabase$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["supabase"].channel(`room:${roomId}`, {
+                config: {
+                    presence: {
+                        key: userIdRef.current
+                    }
+                }
+            });
+            // Subscribe to sync messages
+            channel.on("broadcast", {
+                event: "sync"
+            }, {
+                "useRoomSync.useEffect": (payload)=>{
+                    const message = payload.payload;
+                    // Ignore our own messages (prevent feedback loops)
+                    if (message.userId === userIdRef.current && isLocalChangeRef.current) {
+                        isLocalChangeRef.current = false;
+                        return;
+                    }
+                    handleRemoteMessage(message);
+                }
+            }["useRoomSync.useEffect"]).on("presence", {
+                event: "sync"
+            }, {
+                "useRoomSync.useEffect": ()=>{
+                    // Update participants list from presence
+                    const presence = channel.presenceState();
+                    const participants = Object.values(presence).flat().map({
+                        "useRoomSync.useEffect.participants": (p)=>p
+                    }["useRoomSync.useEffect.participants"]);
+                    setRoomState({
+                        "useRoomSync.useEffect": (prev)=>prev ? {
+                                ...prev,
+                                participants
+                            } : null
+                    }["useRoomSync.useEffect"]);
+                }
+            }["useRoomSync.useEffect"]).on("presence", {
+                event: "join"
+            }, {
+                "useRoomSync.useEffect": ({ key, newPresences })=>{
+                    // New participant joined
+                    const newParticipant = newPresences[0];
+                    if (newParticipant && newParticipant.id !== userIdRef.current) {
+                        // Send full sync to new participant
+                        if (roomState) {
+                            broadcastMessage({
+                                type: "full_sync",
+                                state: roomState
+                            });
+                        }
+                    }
+                }
+            }["useRoomSync.useEffect"]).subscribe({
+                "useRoomSync.useEffect": (status)=>{
+                    setIsConnected(status === "SUBSCRIBED");
+                    setIsLoading(false);
+                    if (status === "SUBSCRIBED") {
+                        // Join presence
+                        const participant = {
+                            id: userIdRef.current,
+                            joinedAt: Date.now()
+                        };
+                        channel.track(participant);
+                        // Fetch or create room state
+                        fetchOrCreateRoom(roomId).then({
+                            "useRoomSync.useEffect": (state)=>{
+                                if (state) {
+                                    setRoomState(state);
+                                    // Broadcast full sync to other participants
+                                    broadcastMessage({
+                                        type: "full_sync",
+                                        state
+                                    });
+                                }
+                            }
+                        }["useRoomSync.useEffect"]);
+                    }
+                }
+            }["useRoomSync.useEffect"]);
+            channelRef.current = channel;
+            return ({
+                "useRoomSync.useEffect": ()=>{
+                    channel.unsubscribe();
+                    channelRef.current = null;
+                }
+            })["useRoomSync.useEffect"];
+        }
+    }["useRoomSync.useEffect"], [
+        roomId
+    ]);
+    // Fetch room from Supabase or create default
+    const fetchOrCreateRoom = async (id)=>{
+        try {
+            const { data, error: fetchError } = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$supabase$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["supabase"].from("rooms").select("*").eq("id", id).single();
+            if (fetchError && fetchError.code !== "PGRST116") {
+                // PGRST116 = not found, which is fine (we'll create)
+                console.error("Error fetching room:", fetchError);
+                setError("Failed to load room");
+                return null;
+            }
+            if (data) {
+                // Room exists, return it
+                return {
+                    id: data.id,
+                    pattern: data.pattern,
+                    transport: data.transport,
+                    instruments: data.instruments,
+                    participants: [],
+                    createdAt: new Date(data.created_at).getTime(),
+                    lastActivity: new Date(data.last_activity).getTime()
+                };
+            }
+            // Room doesn't exist, create default
+            const newState = {
+                id,
+                pattern: (0, __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["createEmptyPattern"])(),
+                transport: (0, __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["createDefaultTransport"])(),
+                instruments: (0, __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["createDefaultInstrumentParams"])(),
+                participants: [],
+                createdAt: Date.now(),
+                lastActivity: Date.now()
+            };
+            // Save to Supabase
+            const { error: insertError } = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$supabase$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["supabase"].from("rooms").insert({
+                id: newState.id,
+                pattern: newState.pattern,
+                transport: newState.transport,
+                instruments: newState.instruments,
+                created_at: new Date(newState.createdAt).toISOString(),
+                last_activity: new Date(newState.lastActivity).toISOString()
+            });
+            if (insertError) {
+                console.error("Error creating room:", insertError);
+                setError("Failed to create room");
+                return null;
+            }
+            return newState;
+        } catch (err) {
+            console.error("Unexpected error in fetchOrCreateRoom:", err);
+            setError("Unexpected error");
+            return null;
+        }
+    };
+    // Broadcast a sync message to the room
+    const broadcastMessage = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"])({
+        "useRoomSync.useCallback[broadcastMessage]": (message)=>{
+            const channel = channelRef.current;
+            if (!channel) return;
+            channel.send({
+                type: "broadcast",
+                event: "sync",
+                payload: message
+            });
+        }
+    }["useRoomSync.useCallback[broadcastMessage]"], []);
+    // Handle incoming remote sync messages
+    const handleRemoteMessage = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"])({
+        "useRoomSync.useCallback[handleRemoteMessage]": (message)=>{
+            setRoomState({
+                "useRoomSync.useCallback[handleRemoteMessage]": (prev)=>{
+                    if (!prev) return prev;
+                    switch(message.type){
+                        case "step_toggle":
+                            {
+                                const nextPattern = prev.pattern.map({
+                                    "useRoomSync.useCallback[handleRemoteMessage].nextPattern": (r)=>r.map({
+                                            "useRoomSync.useCallback[handleRemoteMessage].nextPattern": (s)=>({
+                                                    ...s
+                                                })
+                                        }["useRoomSync.useCallback[handleRemoteMessage].nextPattern"])
+                                }["useRoomSync.useCallback[handleRemoteMessage].nextPattern"]);
+                                const step = nextPattern[message.row]?.[message.col];
+                                if (step) {
+                                    step.active = !step.active;
+                                }
+                                return {
+                                    ...prev,
+                                    pattern: nextPattern,
+                                    lastActivity: message.timestamp
+                                };
+                            }
+                        case "transport_play":
+                            return {
+                                ...prev,
+                                transport: {
+                                    ...prev.transport,
+                                    isPlaying: true
+                                },
+                                lastActivity: message.timestamp
+                            };
+                        case "transport_pause":
+                            return {
+                                ...prev,
+                                transport: {
+                                    ...prev.transport,
+                                    isPlaying: false,
+                                    currentStep: prev.transport.startStep
+                                },
+                                lastActivity: message.timestamp
+                            };
+                        case "tempo_change":
+                            return {
+                                ...prev,
+                                transport: {
+                                    ...prev.transport,
+                                    tempo: message.tempo
+                                },
+                                lastActivity: message.timestamp
+                            };
+                        case "range_change":
+                            return {
+                                ...prev,
+                                transport: {
+                                    ...prev.transport,
+                                    startStep: message.startStep,
+                                    endStep: message.endStep
+                                },
+                                lastActivity: message.timestamp
+                            };
+                        case "instrument_param":
+                            {
+                                const nextInstruments = {
+                                    ...prev.instruments,
+                                    [message.id]: {
+                                        ...prev.instruments[message.id],
+                                        [message.field]: message.value
+                                    }
+                                };
+                                return {
+                                    ...prev,
+                                    instruments: nextInstruments,
+                                    lastActivity: message.timestamp
+                                };
+                            }
+                        case "full_sync":
+                            return message.state;
+                        default:
+                            return prev;
+                    }
+                }
+            }["useRoomSync.useCallback[handleRemoteMessage]"]);
+        }
+    }["useRoomSync.useCallback[handleRemoteMessage]"], []);
+    // Update pattern (optimistic update + broadcast)
+    const updatePattern = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"])({
+        "useRoomSync.useCallback[updatePattern]": (pattern)=>{
+            setRoomState({
+                "useRoomSync.useCallback[updatePattern]": (prev)=>{
+                    if (!prev) return prev;
+                    return {
+                        ...prev,
+                        pattern,
+                        lastActivity: Date.now()
+                    };
+                }
+            }["useRoomSync.useCallback[updatePattern]"]);
+            if (roomId) {
+                isLocalChangeRef.current = true;
+            // Note: We broadcast individual step toggles, not full pattern
+            // This is handled by toggleStep below
+            }
+        }
+    }["useRoomSync.useCallback[updatePattern]"], [
+        roomId
+    ]);
+    // Toggle a single step (optimistic + broadcast)
+    const toggleStep = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"])({
+        "useRoomSync.useCallback[toggleStep]": (row, col)=>{
+            setRoomState({
+                "useRoomSync.useCallback[toggleStep]": (prev)=>{
+                    if (!prev) return prev;
+                    const nextPattern = prev.pattern.map({
+                        "useRoomSync.useCallback[toggleStep].nextPattern": (r)=>r.map({
+                                "useRoomSync.useCallback[toggleStep].nextPattern": (s)=>({
+                                        ...s
+                                    })
+                            }["useRoomSync.useCallback[toggleStep].nextPattern"])
+                    }["useRoomSync.useCallback[toggleStep].nextPattern"]);
+                    const step = nextPattern[row]?.[col];
+                    if (step) {
+                        step.active = !step.active;
+                    }
+                    return {
+                        ...prev,
+                        pattern: nextPattern,
+                        lastActivity: Date.now()
+                    };
+                }
+            }["useRoomSync.useCallback[toggleStep]"]);
+            if (roomId) {
+                isLocalChangeRef.current = true;
+                broadcastMessage({
+                    type: "step_toggle",
+                    row,
+                    col,
+                    userId: userIdRef.current,
+                    timestamp: Date.now()
+                });
+            }
+        }
+    }["useRoomSync.useCallback[toggleStep]"], [
+        roomId,
+        broadcastMessage
+    ]);
+    // Update transport (optimistic + broadcast)
+    const updateTransport = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"])({
+        "useRoomSync.useCallback[updateTransport]": (transport)=>{
+            setRoomState({
+                "useRoomSync.useCallback[updateTransport]": (prev)=>{
+                    if (!prev) return prev;
+                    return {
+                        ...prev,
+                        transport: {
+                            ...prev.transport,
+                            ...transport
+                        },
+                        lastActivity: Date.now()
+                    };
+                }
+            }["useRoomSync.useCallback[updateTransport]"]);
+            if (roomId) {
+                isLocalChangeRef.current = true;
+                if (transport.isPlaying !== undefined) {
+                    broadcastMessage({
+                        type: transport.isPlaying ? "transport_play" : "transport_pause",
+                        userId: userIdRef.current,
+                        timestamp: Date.now()
+                    });
+                }
+                if (transport.tempo !== undefined) {
+                    broadcastMessage({
+                        type: "tempo_change",
+                        tempo: transport.tempo,
+                        userId: userIdRef.current,
+                        timestamp: Date.now()
+                    });
+                }
+                if (transport.startStep !== undefined || transport.endStep !== undefined) {
+                    const currentState = roomState || {
+                        transport: (0, __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["createDefaultTransport"])()
+                    };
+                    broadcastMessage({
+                        type: "range_change",
+                        startStep: transport.startStep ?? currentState.transport.startStep,
+                        endStep: transport.endStep ?? currentState.transport.endStep,
+                        userId: userIdRef.current,
+                        timestamp: Date.now()
+                    });
+                }
+            }
+        }
+    }["useRoomSync.useCallback[updateTransport]"], [
+        roomId,
+        broadcastMessage,
+        roomState
+    ]);
+    // Update instrument parameter (optimistic + broadcast)
+    const updateInstrumentParam = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"])({
+        "useRoomSync.useCallback[updateInstrumentParam]": (id, field, value)=>{
+            setRoomState({
+                "useRoomSync.useCallback[updateInstrumentParam]": (prev)=>{
+                    if (!prev) return prev;
+                    const nextInstruments = {
+                        ...prev.instruments,
+                        [id]: {
+                            ...prev.instruments[id],
+                            [field]: value
+                        }
+                    };
+                    return {
+                        ...prev,
+                        instruments: nextInstruments,
+                        lastActivity: Date.now()
+                    };
+                }
+            }["useRoomSync.useCallback[updateInstrumentParam]"]);
+            if (roomId) {
+                isLocalChangeRef.current = true;
+                broadcastMessage({
+                    type: "instrument_param",
+                    id,
+                    field,
+                    value,
+                    userId: userIdRef.current,
+                    timestamp: Date.now()
+                });
+            }
+        }
+    }["useRoomSync.useCallback[updateInstrumentParam]"], [
+        roomId,
+        broadcastMessage
+    ]);
+    return {
+        roomState,
+        isConnected,
+        participants: roomState?.participants || [],
+        isLoading,
+        error,
+        updatePattern,
+        updateTransport,
+        updateInstrumentParam,
+        toggleStep
+    };
+}
+_s(useRoomSync, "vyI6EAH5BfmPj/Rmi2iwi/S6xKU=");
+if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
+    __turbopack_context__.k.registerExports(__turbopack_context__.m, globalThis.$RefreshHelpers$);
+}
+}),
 "[project]/components/TransportControls.tsx [app-client] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
@@ -818,6 +1303,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/types/sequencer.ts [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$hooks$2f$useToneEngine$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/app/hooks/useToneEngine.ts [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$hooks$2f$useRoomSync$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/app/hooks/useRoomSync.ts [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$TransportControls$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/TransportControls.tsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$PatternGrid$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/PatternGrid.tsx [app-client] (ecmascript)");
 ;
@@ -828,38 +1314,131 @@ var _s = __turbopack_context__.k.signature();
 ;
 ;
 ;
+;
 function SequencerPage() {
     _s();
-    const [pattern, setPattern] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])({
+    // Room management: null = solo mode, string = room ID
+    const [roomId, setRoomId] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
+    // Local state for solo mode (when roomId is null)
+    const [localPattern, setLocalPattern] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])({
         "SequencerPage.useState": ()=>(0, __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["createEmptyPattern"])()
     }["SequencerPage.useState"]);
-    const [instrumentParams, setInstrumentParams] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])({
+    const [localInstrumentParams, setLocalInstrumentParams] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])({
         "SequencerPage.useState": ()=>(0, __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["createDefaultInstrumentParams"])()
     }["SequencerPage.useState"]);
-    const engine = (0, __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$hooks$2f$useToneEngine$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useToneEngine"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["createDefaultTransport"])(), pattern, instrumentParams);
+    // Room sync hook (only active when roomId is set)
+    const roomSync = (0, __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$hooks$2f$useRoomSync$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRoomSync"])(roomId);
+    // Determine which state to use: room sync or local
+    const pattern = roomId && roomSync.roomState ? roomSync.roomState.pattern : localPattern;
+    const instrumentParams = roomId && roomSync.roomState ? roomSync.roomState.instruments : localInstrumentParams;
+    const transport = roomId && roomSync.roomState ? roomSync.roomState.transport : (0, __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["createDefaultTransport"])();
+    // Tone engine uses current pattern/params
+    const engine = (0, __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$hooks$2f$useToneEngine$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useToneEngine"])(transport, pattern, instrumentParams);
+    // Sync room state changes to Tone engine
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "SequencerPage.useEffect": ()=>{
+            if (roomId && roomSync.roomState) {
+                engine.updatePattern(roomSync.roomState.pattern);
+                engine.updateInstrumentParams(roomSync.roomState.instruments);
+            }
+        }
+    }["SequencerPage.useEffect"], [
+        roomId,
+        roomSync.roomState,
+        engine
+    ]);
+    // Sync transport changes from room
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "SequencerPage.useEffect": ()=>{
+            if (roomId && roomSync.roomState) {
+                const roomTransport = roomSync.roomState.transport;
+                if (roomTransport.tempo !== engine.transport.tempo) {
+                    engine.setTempo(roomTransport.tempo);
+                }
+                if (roomTransport.startStep !== engine.transport.startStep || roomTransport.endStep !== engine.transport.endStep) {
+                    engine.setRange(roomTransport.startStep, roomTransport.endStep);
+                }
+                if (roomTransport.isPlaying !== engine.transport.isPlaying) {
+                    if (roomTransport.isPlaying && !engine.transport.isPlaying) {
+                        engine.togglePlay();
+                    } else if (!roomTransport.isPlaying && engine.transport.isPlaying) {
+                        engine.togglePlay();
+                    }
+                }
+            }
+        }
+    }["SequencerPage.useEffect"], [
+        roomId,
+        roomSync.roomState,
+        engine
+    ]);
     const handleToggleStep = (row, col)=>{
-        setPattern((prev)=>{
-            const next = prev.map((r)=>r.map((s)=>({
-                        ...s
-                    })));
-            next[row][col].active = !next[row][col].active;
-            engine.updatePattern(next);
-            return next;
-        });
+        if (roomId) {
+            // Use room sync
+            roomSync.toggleStep(row, col);
+        } else {
+            // Local solo mode
+            setLocalPattern((prev)=>{
+                const next = prev.map((r)=>r.map((s)=>({
+                            ...s
+                        })));
+                next[row][col].active = !next[row][col].active;
+                engine.updatePattern(next);
+                return next;
+            });
+        }
     };
     const handleInstrumentParamsChange = (id, field, value)=>{
-        setInstrumentParams((prev)=>{
-            const next = {
-                ...prev,
-                [id]: {
-                    ...prev[id],
-                    [field]: value
-                }
-            };
-            engine.updateInstrumentParams(next);
-            return next;
-        });
+        if (roomId) {
+            // Use room sync
+            roomSync.updateInstrumentParam(id, field, value);
+        } else {
+            // Local solo mode
+            setLocalInstrumentParams((prev)=>{
+                const next = {
+                    ...prev,
+                    [id]: {
+                        ...prev[id],
+                        [field]: value
+                    }
+                };
+                engine.updateInstrumentParams(next);
+                return next;
+            });
+        }
     };
+    const handleTransportChange = {
+        tempo: (tempo)=>{
+            if (roomId) {
+                roomSync.updateTransport({
+                    tempo
+                });
+            } else {
+                engine.setTempo(tempo);
+            }
+        },
+        range: (startStep, endStep)=>{
+            if (roomId) {
+                roomSync.updateTransport({
+                    startStep,
+                    endStep
+                });
+            } else {
+                engine.setRange(startStep, endStep);
+            }
+        },
+        togglePlay: async ()=>{
+            if (roomId) {
+                const currentPlaying = engine.transport.isPlaying;
+                roomSync.updateTransport({
+                    isPlaying: !currentPlaying
+                });
+            } else {
+                await engine.togglePlay();
+            }
+        }
+    };
+    ;
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
         className: "flex flex-1 flex-col gap-4",
         children: [
@@ -873,7 +1452,7 @@ function SequencerPage() {
                                 children: "Intersymmetric Works"
                             }, void 0, false, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 59,
+                                lineNumber: 143,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
@@ -881,13 +1460,13 @@ function SequencerPage() {
                                 children: "Sequencer 01"
                             }, void 0, false, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 62,
+                                lineNumber: 146,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 58,
+                        lineNumber: 142,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -897,7 +1476,7 @@ function SequencerPage() {
                                 children: "Room Code:"
                             }, void 0, false, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 67,
+                                lineNumber: 151,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -905,19 +1484,19 @@ function SequencerPage() {
                                 children: "solo"
                             }, void 0, false, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 68,
+                                lineNumber: 152,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 66,
+                        lineNumber: 150,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 57,
+                lineNumber: 141,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
@@ -934,7 +1513,7 @@ function SequencerPage() {
                         onTogglePlay: engine.togglePlay
                     }, void 0, false, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 73,
+                        lineNumber: 157,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$PatternGrid$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["PatternGrid"], {
@@ -945,7 +1524,7 @@ function SequencerPage() {
                         onInstrumentParamChange: handleInstrumentParamsChange
                     }, void 0, false, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 84,
+                        lineNumber: 168,
                         columnNumber: 9
                     }, this),
                     !engine.ready && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -953,24 +1532,25 @@ function SequencerPage() {
                         children: "Audio engine is loading in the background. You can already draw a pattern; sound will start once it is ready."
                     }, void 0, false, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 93,
+                        lineNumber: 177,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 72,
+                lineNumber: 156,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/app/page.tsx",
-        lineNumber: 56,
+        lineNumber: 140,
         columnNumber: 5
     }, this);
 }
-_s(SequencerPage, "kL1XUiBZqSGFzKbye/DG7fTd/lw=", false, function() {
+_s(SequencerPage, "wNIJUqISDaxMhs6s1w2khkBnz2s=", false, function() {
     return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$hooks$2f$useRoomSync$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRoomSync"],
         __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$hooks$2f$useToneEngine$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useToneEngine"]
     ];
 });
@@ -981,233 +1561,6 @@ if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelper
     __turbopack_context__.k.registerExports(__turbopack_context__.m, globalThis.$RefreshHelpers$);
 }
 }),
-"[project]/node_modules/next/dist/compiled/react/cjs/react-jsx-dev-runtime.development.js [app-client] (ecmascript)", ((__turbopack_context__, module, exports) => {
-"use strict";
-
-/**
- * @license React
- * react-jsx-dev-runtime.development.js
- *
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$polyfills$2f$process$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = /*#__PURE__*/ __turbopack_context__.i("[project]/node_modules/next/dist/build/polyfills/process.js [app-client] (ecmascript)");
-"use strict";
-"production" !== ("TURBOPACK compile-time value", "development") && function() {
-    function getComponentNameFromType(type) {
-        if (null == type) return null;
-        if ("function" === typeof type) return type.$$typeof === REACT_CLIENT_REFERENCE ? null : type.displayName || type.name || null;
-        if ("string" === typeof type) return type;
-        switch(type){
-            case REACT_FRAGMENT_TYPE:
-                return "Fragment";
-            case REACT_PROFILER_TYPE:
-                return "Profiler";
-            case REACT_STRICT_MODE_TYPE:
-                return "StrictMode";
-            case REACT_SUSPENSE_TYPE:
-                return "Suspense";
-            case REACT_SUSPENSE_LIST_TYPE:
-                return "SuspenseList";
-            case REACT_ACTIVITY_TYPE:
-                return "Activity";
-            case REACT_VIEW_TRANSITION_TYPE:
-                return "ViewTransition";
-        }
-        if ("object" === typeof type) switch("number" === typeof type.tag && console.error("Received an unexpected object in getComponentNameFromType(). This is likely a bug in React. Please file an issue."), type.$$typeof){
-            case REACT_PORTAL_TYPE:
-                return "Portal";
-            case REACT_CONTEXT_TYPE:
-                return type.displayName || "Context";
-            case REACT_CONSUMER_TYPE:
-                return (type._context.displayName || "Context") + ".Consumer";
-            case REACT_FORWARD_REF_TYPE:
-                var innerType = type.render;
-                type = type.displayName;
-                type || (type = innerType.displayName || innerType.name || "", type = "" !== type ? "ForwardRef(" + type + ")" : "ForwardRef");
-                return type;
-            case REACT_MEMO_TYPE:
-                return innerType = type.displayName || null, null !== innerType ? innerType : getComponentNameFromType(type.type) || "Memo";
-            case REACT_LAZY_TYPE:
-                innerType = type._payload;
-                type = type._init;
-                try {
-                    return getComponentNameFromType(type(innerType));
-                } catch (x) {}
-        }
-        return null;
-    }
-    function testStringCoercion(value) {
-        return "" + value;
-    }
-    function checkKeyStringCoercion(value) {
-        try {
-            testStringCoercion(value);
-            var JSCompiler_inline_result = !1;
-        } catch (e) {
-            JSCompiler_inline_result = !0;
-        }
-        if (JSCompiler_inline_result) {
-            JSCompiler_inline_result = console;
-            var JSCompiler_temp_const = JSCompiler_inline_result.error;
-            var JSCompiler_inline_result$jscomp$0 = "function" === typeof Symbol && Symbol.toStringTag && value[Symbol.toStringTag] || value.constructor.name || "Object";
-            JSCompiler_temp_const.call(JSCompiler_inline_result, "The provided key is an unsupported type %s. This value must be coerced to a string before using it here.", JSCompiler_inline_result$jscomp$0);
-            return testStringCoercion(value);
-        }
-    }
-    function getTaskName(type) {
-        if (type === REACT_FRAGMENT_TYPE) return "<>";
-        if ("object" === typeof type && null !== type && type.$$typeof === REACT_LAZY_TYPE) return "<...>";
-        try {
-            var name = getComponentNameFromType(type);
-            return name ? "<" + name + ">" : "<...>";
-        } catch (x) {
-            return "<...>";
-        }
-    }
-    function getOwner() {
-        var dispatcher = ReactSharedInternals.A;
-        return null === dispatcher ? null : dispatcher.getOwner();
-    }
-    function UnknownOwner() {
-        return Error("react-stack-top-frame");
-    }
-    function hasValidKey(config) {
-        if (hasOwnProperty.call(config, "key")) {
-            var getter = Object.getOwnPropertyDescriptor(config, "key").get;
-            if (getter && getter.isReactWarning) return !1;
-        }
-        return void 0 !== config.key;
-    }
-    function defineKeyPropWarningGetter(props, displayName) {
-        function warnAboutAccessingKey() {
-            specialPropKeyWarningShown || (specialPropKeyWarningShown = !0, console.error("%s: `key` is not a prop. Trying to access it will result in `undefined` being returned. If you need to access the same value within the child component, you should pass it as a different prop. (https://react.dev/link/special-props)", displayName));
-        }
-        warnAboutAccessingKey.isReactWarning = !0;
-        Object.defineProperty(props, "key", {
-            get: warnAboutAccessingKey,
-            configurable: !0
-        });
-    }
-    function elementRefGetterWithDeprecationWarning() {
-        var componentName = getComponentNameFromType(this.type);
-        didWarnAboutElementRef[componentName] || (didWarnAboutElementRef[componentName] = !0, console.error("Accessing element.ref was removed in React 19. ref is now a regular prop. It will be removed from the JSX Element type in a future release."));
-        componentName = this.props.ref;
-        return void 0 !== componentName ? componentName : null;
-    }
-    function ReactElement(type, key, props, owner, debugStack, debugTask) {
-        var refProp = props.ref;
-        type = {
-            $$typeof: REACT_ELEMENT_TYPE,
-            type: type,
-            key: key,
-            props: props,
-            _owner: owner
-        };
-        null !== (void 0 !== refProp ? refProp : null) ? Object.defineProperty(type, "ref", {
-            enumerable: !1,
-            get: elementRefGetterWithDeprecationWarning
-        }) : Object.defineProperty(type, "ref", {
-            enumerable: !1,
-            value: null
-        });
-        type._store = {};
-        Object.defineProperty(type._store, "validated", {
-            configurable: !1,
-            enumerable: !1,
-            writable: !0,
-            value: 0
-        });
-        Object.defineProperty(type, "_debugInfo", {
-            configurable: !1,
-            enumerable: !1,
-            writable: !0,
-            value: null
-        });
-        Object.defineProperty(type, "_debugStack", {
-            configurable: !1,
-            enumerable: !1,
-            writable: !0,
-            value: debugStack
-        });
-        Object.defineProperty(type, "_debugTask", {
-            configurable: !1,
-            enumerable: !1,
-            writable: !0,
-            value: debugTask
-        });
-        Object.freeze && (Object.freeze(type.props), Object.freeze(type));
-        return type;
-    }
-    function jsxDEVImpl(type, config, maybeKey, isStaticChildren, debugStack, debugTask) {
-        var children = config.children;
-        if (void 0 !== children) if (isStaticChildren) if (isArrayImpl(children)) {
-            for(isStaticChildren = 0; isStaticChildren < children.length; isStaticChildren++)validateChildKeys(children[isStaticChildren]);
-            Object.freeze && Object.freeze(children);
-        } else console.error("React.jsx: Static children should always be an array. You are likely explicitly calling React.jsxs or React.jsxDEV. Use the Babel transform instead.");
-        else validateChildKeys(children);
-        if (hasOwnProperty.call(config, "key")) {
-            children = getComponentNameFromType(type);
-            var keys = Object.keys(config).filter(function(k) {
-                return "key" !== k;
-            });
-            isStaticChildren = 0 < keys.length ? "{key: someKey, " + keys.join(": ..., ") + ": ...}" : "{key: someKey}";
-            didWarnAboutKeySpread[children + isStaticChildren] || (keys = 0 < keys.length ? "{" + keys.join(": ..., ") + ": ...}" : "{}", console.error('A props object containing a "key" prop is being spread into JSX:\n  let props = %s;\n  <%s {...props} />\nReact keys must be passed directly to JSX without using spread:\n  let props = %s;\n  <%s key={someKey} {...props} />', isStaticChildren, children, keys, children), didWarnAboutKeySpread[children + isStaticChildren] = !0);
-        }
-        children = null;
-        void 0 !== maybeKey && (checkKeyStringCoercion(maybeKey), children = "" + maybeKey);
-        hasValidKey(config) && (checkKeyStringCoercion(config.key), children = "" + config.key);
-        if ("key" in config) {
-            maybeKey = {};
-            for(var propName in config)"key" !== propName && (maybeKey[propName] = config[propName]);
-        } else maybeKey = config;
-        children && defineKeyPropWarningGetter(maybeKey, "function" === typeof type ? type.displayName || type.name || "Unknown" : type);
-        return ReactElement(type, children, maybeKey, getOwner(), debugStack, debugTask);
-    }
-    function validateChildKeys(node) {
-        isValidElement(node) ? node._store && (node._store.validated = 1) : "object" === typeof node && null !== node && node.$$typeof === REACT_LAZY_TYPE && ("fulfilled" === node._payload.status ? isValidElement(node._payload.value) && node._payload.value._store && (node._payload.value._store.validated = 1) : node._store && (node._store.validated = 1));
-    }
-    function isValidElement(object) {
-        return "object" === typeof object && null !== object && object.$$typeof === REACT_ELEMENT_TYPE;
-    }
-    var React = __turbopack_context__.r("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)"), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy"), REACT_ACTIVITY_TYPE = Symbol.for("react.activity"), REACT_VIEW_TRANSITION_TYPE = Symbol.for("react.view_transition"), REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), ReactSharedInternals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, hasOwnProperty = Object.prototype.hasOwnProperty, isArrayImpl = Array.isArray, createTask = console.createTask ? console.createTask : function() {
-        return null;
-    };
-    React = {
-        react_stack_bottom_frame: function(callStackForError) {
-            return callStackForError();
-        }
-    };
-    var specialPropKeyWarningShown;
-    var didWarnAboutElementRef = {};
-    var unknownOwnerDebugStack = React.react_stack_bottom_frame.bind(React, UnknownOwner)();
-    var unknownOwnerDebugTask = createTask(getTaskName(UnknownOwner));
-    var didWarnAboutKeySpread = {};
-    exports.Fragment = REACT_FRAGMENT_TYPE;
-    exports.jsxDEV = function(type, config, maybeKey, isStaticChildren) {
-        var trackActualOwner = 1e4 > ReactSharedInternals.recentlyCreatedOwnerStacks++;
-        if (trackActualOwner) {
-            var previousStackTraceLimit = Error.stackTraceLimit;
-            Error.stackTraceLimit = 10;
-            var debugStackDEV = Error("react-stack-top-frame");
-            Error.stackTraceLimit = previousStackTraceLimit;
-        } else debugStackDEV = unknownOwnerDebugStack;
-        return jsxDEVImpl(type, config, maybeKey, isStaticChildren, debugStackDEV, trackActualOwner ? createTask(getTaskName(type)) : unknownOwnerDebugTask);
-    };
-}();
-}),
-"[project]/node_modules/next/dist/compiled/react/jsx-dev-runtime.js [app-client] (ecmascript)", ((__turbopack_context__, module, exports) => {
-"use strict";
-
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$polyfills$2f$process$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = /*#__PURE__*/ __turbopack_context__.i("[project]/node_modules/next/dist/build/polyfills/process.js [app-client] (ecmascript)");
-'use strict';
-if ("TURBOPACK compile-time falsy", 0) //TURBOPACK unreachable
-;
-else {
-    module.exports = __turbopack_context__.r("[project]/node_modules/next/dist/compiled/react/cjs/react-jsx-dev-runtime.development.js [app-client] (ecmascript)");
-}
-}),
 ]);
 
-//# sourceMappingURL=_cc8a1085._.js.map
+//# sourceMappingURL=_70441f36._.js.map
