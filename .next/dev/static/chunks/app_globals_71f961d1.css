@@ -474,7 +474,7 @@
     width: calc(var(--spacing) * 40);
   }
 
-  .w-\[1px\], .w-px {
+  .w-\[1px\] {
     width: 1px;
   }
 

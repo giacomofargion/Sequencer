@@ -279,6 +279,7 @@ export function useRoomSync(roomId: RoomId | null): UseRoomSyncReturn {
             lastActivity: message.timestamp,
           };
 
+
         case "instrument_param": {
           const nextInstruments = {
             ...prev.instruments,
