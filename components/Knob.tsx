@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import type { FC } from "react";
 
 type Props = {
@@ -26,12 +26,19 @@ export const Knob: FC<Props> = ({
 
   valueRef.current = value;
 
-  useEffect(() => {
-    const handleMove = (event: PointerEvent) => {
-      if (!activeRef.current) return;
-      event.preventDefault();
+  const handlePointerDown: React.PointerEventHandler<HTMLDivElement> = (
+    event,
+  ) => {
+    event.preventDefault();
+    activeRef.current = true;
+    const element = event.currentTarget;
+    element.setPointerCapture(event.pointerId);
 
-      const delta = -event.movementY;
+    const handleMove = (moveEvent: PointerEvent) => {
+      if (!activeRef.current) return;
+      moveEvent.preventDefault();
+
+      const delta = -moveEvent.movementY;
       const range = max - min;
       const sensitivity = range / 200; // 200px drag to sweep full range.
       const nextRaw = valueRef.current + delta * sensitivity;
@@ -43,27 +50,13 @@ export const Knob: FC<Props> = ({
 
     const handleUp = () => {
       activeRef.current = false;
+      element.releasePointerCapture(event.pointerId);
       window.removeEventListener("pointermove", handleMove);
       window.removeEventListener("pointerup", handleUp);
     };
 
-    if (activeRef.current) {
-      window.addEventListener("pointermove", handleMove);
-      window.addEventListener("pointerup", handleUp);
-    }
-
-    return () => {
-      window.removeEventListener("pointermove", handleMove);
-      window.removeEventListener("pointerup", handleUp);
-    };
-  }, [max, min, onChange, step]);
-
-  const handlePointerDown: React.PointerEventHandler<HTMLDivElement> = (
-    event,
-  ) => {
-    event.preventDefault();
-    activeRef.current = true;
-    (event.target as HTMLElement).setPointerCapture(event.pointerId);
+    window.addEventListener("pointermove", handleMove);
+    window.addEventListener("pointerup", handleUp);
   };
 
   const normalized =

@@ -850,11 +850,15 @@ const Knob = ({ label, value, min, max, step, onChange })=>{
     const valueRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRef"])(value);
     const activeRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRef"])(false);
     valueRef.current = value;
-    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
-        const handleMove = (event)=>{
+    const handlePointerDown = (event)=>{
+        event.preventDefault();
+        activeRef.current = true;
+        const element = event.currentTarget;
+        element.setPointerCapture(event.pointerId);
+        const handleMove = (moveEvent)=>{
             if (!activeRef.current) return;
-            event.preventDefault();
-            const delta = -event.movementY;
+            moveEvent.preventDefault();
+            const delta = -moveEvent.movementY;
             const range = max - min;
             const sensitivity = range / 200; // 200px drag to sweep full range.
             const nextRaw = valueRef.current + delta * sensitivity;
@@ -865,27 +869,12 @@ const Knob = ({ label, value, min, max, step, onChange })=>{
         };
         const handleUp = ()=>{
             activeRef.current = false;
+            element.releasePointerCapture(event.pointerId);
             window.removeEventListener("pointermove", handleMove);
             window.removeEventListener("pointerup", handleUp);
         };
-        if (activeRef.current) {
-            window.addEventListener("pointermove", handleMove);
-            window.addEventListener("pointerup", handleUp);
-        }
-        return ()=>{
-            window.removeEventListener("pointermove", handleMove);
-            window.removeEventListener("pointerup", handleUp);
-        };
-    }, [
-        max,
-        min,
-        onChange,
-        step
-    ]);
-    const handlePointerDown = (event)=>{
-        event.preventDefault();
-        activeRef.current = true;
-        event.target.setPointerCapture(event.pointerId);
+        window.addEventListener("pointermove", handleMove);
+        window.addEventListener("pointerup", handleUp);
     };
     const normalized = max === min ? 0 : (value - min) / (max - min); // 0..1
     const angle = -135 + normalized * 270; // map to -135..135
@@ -902,7 +891,7 @@ const Knob = ({ label, value, min, max, step, onChange })=>{
                         className: "absolute inset-[18%] rounded-full bg-neutral-100"
                     }, void 0, false, {
                         fileName: "[project]/components/Knob.tsx",
-                        lineNumber: 81,
+                        lineNumber: 74,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -912,13 +901,13 @@ const Knob = ({ label, value, min, max, step, onChange })=>{
                         }
                     }, void 0, false, {
                         fileName: "[project]/components/Knob.tsx",
-                        lineNumber: 82,
+                        lineNumber: 75,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/Knob.tsx",
-                lineNumber: 75,
+                lineNumber: 68,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -926,13 +915,13 @@ const Knob = ({ label, value, min, max, step, onChange })=>{
                 children: label
             }, void 0, false, {
                 fileName: "[project]/components/Knob.tsx",
-                lineNumber: 89,
+                lineNumber: 82,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/components/Knob.tsx",
-        lineNumber: 74,
+        lineNumber: 67,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0));
 };
