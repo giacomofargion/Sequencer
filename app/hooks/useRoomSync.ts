@@ -15,11 +15,16 @@ import type {
   InstrumentId,
   Participant,
   SyncMessage,
+  ChatMessage,
+  SynthPattern,
+  SynthParams,
 } from "@/types/sequencer";
 import {
   createEmptyPattern,
   createDefaultTransport,
   createDefaultInstrumentParams,
+  createEmptySynthPattern,
+  createDefaultSynthParams,
 } from "@/types/sequencer";
 
 type UseRoomSyncReturn = {
@@ -36,6 +41,12 @@ type UseRoomSyncReturn = {
     value: number,
   ) => void;
   toggleStep: (row: number, col: number) => void;
+  // Chat functionality
+  chatMessages: ChatMessage[];
+  sendChatMessage: (text: string) => void;
+  // Synth sequencer functionality
+  toggleSynthStep: (row: number, col: number, note: number) => void;
+  updateSynthParam: (field: "pitch" | "decay" | "timbre", value: number) => void;
 };
 
 // Generate a unique user ID for this session (stored in localStorage)
@@ -58,6 +69,7 @@ export function useRoomSync(roomId: RoomId | null): UseRoomSyncReturn {
   const channelRef = useRef<RealtimeChannel | null>(null);
   const userIdRef = useRef<string>(getUserId());
   const isLocalChangeRef = useRef(false); // Flag to prevent feedback loops
+  const chatMessagesRef = useRef<ChatMessage[]>([]); // Chat messages state (max 100)
 
   // Initialize room connection
   useEffect(() => {
@@ -166,15 +178,20 @@ export function useRoomSync(roomId: RoomId | null): UseRoomSyncReturn {
       }
 
       if (data) {
-        // Room exists, return it
+        // Room exists, return it with defaults for new fields
+        const drumPattern = data.drum_pattern || data.pattern || createEmptyPattern();
         return {
           id: data.id,
-          pattern: data.pattern,
+          pattern: drumPattern, // Keep pattern for backward compatibility
           transport: data.transport,
           instruments: data.instruments,
           participants: [],
           createdAt: new Date(data.created_at).getTime(),
           lastActivity: new Date(data.last_activity).getTime(),
+          chatMessages: [], // Chat messages are real-time only
+          drumPattern,
+          synthPattern: data.synth_pattern || createEmptySynthPattern(),
+          synthParams: data.synth_params || createDefaultSynthParams(),
         };
       }
 
@@ -187,12 +204,18 @@ export function useRoomSync(roomId: RoomId | null): UseRoomSyncReturn {
         participants: [],
         createdAt: Date.now(),
         lastActivity: Date.now(),
+        chatMessages: [],
+        drumPattern: createEmptyPattern(),
+        synthPattern: createEmptySynthPattern(),
+        synthParams: createDefaultSynthParams(),
       };
 
       // Save to Supabase
+      // Insert with base columns first (backward compatible)
+      // New columns (drum_pattern, synth_pattern, synth_params) will be added by migration
       const { error: insertError } = await supabase.from("rooms").insert({
         id: newState.id,
-        pattern: newState.pattern,
+        pattern: newState.pattern, // This will serve as drum_pattern until migration runs
         transport: newState.transport,
         instruments: newState.instruments,
         created_at: new Date(newState.createdAt).toISOString(),
@@ -200,10 +223,35 @@ export function useRoomSync(roomId: RoomId | null): UseRoomSyncReturn {
       });
 
       if (insertError) {
-        console.error("Error creating room:", insertError);
-        setError("Failed to create room");
+        // Log full error details for debugging
+        console.error("Error creating room:", {
+          message: insertError.message,
+          details: insertError.details,
+          hint: insertError.hint,
+          code: insertError.code,
+        });
+        setError(`Failed to create room: ${insertError.message || "Unknown error"}`);
         return null;
       }
+
+      // After successful insert, try to update with new columns if they exist
+      // This is a best-effort update - if columns don't exist, it will fail silently
+      // and the migration can be run later
+      await supabase
+        .from("rooms")
+        .update({
+          drum_pattern: newState.drumPattern,
+          synth_pattern: newState.synthPattern,
+          synth_params: newState.synthParams,
+        })
+        .eq("id", newState.id)
+        .then(({ error: updateError }) => {
+          // Silently ignore update errors - columns may not exist yet
+          if (updateError && updateError.code !== "42703") {
+            // 42703 = column doesn't exist, which is expected if migration hasn't run
+            console.warn("Could not update room with new columns (migration may not have run):", updateError.message);
+          }
+        });
 
       return newState;
     } catch (err) {
@@ -235,14 +283,15 @@ export function useRoomSync(roomId: RoomId | null): UseRoomSyncReturn {
 
       switch (message.type) {
         case "step_toggle": {
-          const nextPattern = prev.pattern.map((r) => r.map((s) => ({ ...s })));
+          const nextPattern = prev.drumPattern.map((r) => r.map((s) => ({ ...s })));
           const step = nextPattern[message.row]?.[message.col];
           if (step) {
             step.active = !step.active;
           }
           return {
             ...prev,
-            pattern: nextPattern,
+            pattern: nextPattern, // Keep for backward compatibility
+            drumPattern: nextPattern,
             lastActivity: message.timestamp,
           };
         }
@@ -298,6 +347,50 @@ export function useRoomSync(roomId: RoomId | null): UseRoomSyncReturn {
         case "full_sync":
           return message.state;
 
+        case "chat_message": {
+          // Add chat message to state (limit to 100 messages)
+          const currentMessages = prev.chatMessages || [];
+          const newMessages = [...currentMessages, message.message];
+          // Keep only last 100 messages
+          const limitedMessages = newMessages.slice(-100);
+          return {
+            ...prev,
+            chatMessages: limitedMessages,
+            lastActivity: message.message.timestamp,
+          };
+        }
+
+        case "synth_step_toggle": {
+          const nextSynthPattern = prev.synthPattern.map((r) => r.map((s) => ({ ...s })));
+          const step = nextSynthPattern[message.row]?.[message.col];
+          if (step) {
+            if (step.active && step.note === message.note) {
+              // Toggle off if same note
+              step.active = false;
+            } else {
+              // Set note and activate
+              step.active = true;
+              step.note = message.note;
+            }
+          }
+          return {
+            ...prev,
+            synthPattern: nextSynthPattern,
+            lastActivity: message.timestamp,
+          };
+        }
+
+        case "synth_param_change": {
+          return {
+            ...prev,
+            synthParams: {
+              ...prev.synthParams,
+              [message.field]: message.value,
+            },
+            lastActivity: message.timestamp,
+          };
+        }
+
         default:
           return prev;
       }
@@ -309,7 +402,12 @@ export function useRoomSync(roomId: RoomId | null): UseRoomSyncReturn {
     (pattern: Pattern) => {
       setRoomState((prev) => {
         if (!prev) return prev;
-        return { ...prev, pattern, lastActivity: Date.now() };
+        return {
+          ...prev,
+          pattern, // Keep for backward compatibility
+          drumPattern: pattern,
+          lastActivity: Date.now(),
+        };
       });
 
       if (roomId) {
@@ -326,14 +424,15 @@ export function useRoomSync(roomId: RoomId | null): UseRoomSyncReturn {
     (row: number, col: number) => {
       setRoomState((prev) => {
         if (!prev) return prev;
-        const nextPattern = prev.pattern.map((r) => r.map((s) => ({ ...s })));
+        const nextPattern = prev.drumPattern.map((r) => r.map((s) => ({ ...s })));
         const step = nextPattern[row]?.[col];
         if (step) {
           step.active = !step.active;
         }
         return {
           ...prev,
-          pattern: nextPattern,
+          pattern: nextPattern, // Keep for backward compatibility
+          drumPattern: nextPattern,
           lastActivity: Date.now(),
         };
       });
@@ -435,6 +534,106 @@ export function useRoomSync(roomId: RoomId | null): UseRoomSyncReturn {
     [roomId, broadcastMessage],
   );
 
+  // Send chat message
+  const sendChatMessage = useCallback(
+    (text: string) => {
+      if (!roomId || !text.trim()) return;
+
+      const message: ChatMessage = {
+        id: `msg_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+        userId: userIdRef.current,
+        text: text.trim(),
+        timestamp: Date.now(),
+      };
+
+      // Optimistically add to local state
+      setRoomState((prev) => {
+        if (!prev) return prev;
+        const currentMessages = prev.chatMessages || [];
+        const newMessages = [...currentMessages, message].slice(-100);
+        return {
+          ...prev,
+          chatMessages: newMessages,
+        };
+      });
+
+      // Broadcast to room
+      broadcastMessage({
+        type: "chat_message",
+        message,
+      });
+    },
+    [roomId, broadcastMessage],
+  );
+
+  // Toggle synth sequencer step
+  const toggleSynthStep = useCallback(
+    (row: number, col: number, note: number) => {
+      setRoomState((prev) => {
+        if (!prev) return prev;
+        const nextSynthPattern = prev.synthPattern.map((r) => r.map((s) => ({ ...s })));
+        const step = nextSynthPattern[row]?.[col];
+        if (step) {
+          if (step.active && step.note === note) {
+            // Toggle off if same note
+            step.active = false;
+          } else {
+            // Set note and activate
+            step.active = true;
+            step.note = note;
+          }
+        }
+        return {
+          ...prev,
+          synthPattern: nextSynthPattern,
+          lastActivity: Date.now(),
+        };
+      });
+
+      if (roomId) {
+        isLocalChangeRef.current = true;
+        broadcastMessage({
+          type: "synth_step_toggle",
+          row,
+          col,
+          note,
+          userId: userIdRef.current,
+          timestamp: Date.now(),
+        });
+      }
+    },
+    [roomId, broadcastMessage],
+  );
+
+  // Update synth parameter
+  const updateSynthParam = useCallback(
+    (field: keyof RoomState["synthParams"], value: number) => {
+      setRoomState((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          synthParams: {
+            ...prev.synthParams,
+            [field]: value,
+          },
+          lastActivity: Date.now(),
+        };
+      });
+
+      if (roomId) {
+        isLocalChangeRef.current = true;
+        broadcastMessage({
+          type: "synth_param_change",
+          field,
+          value,
+          userId: userIdRef.current,
+          timestamp: Date.now(),
+        });
+      }
+    },
+    [roomId, broadcastMessage],
+  );
+
   return {
     roomState,
     isConnected,
@@ -445,5 +644,9 @@ export function useRoomSync(roomId: RoomId | null): UseRoomSyncReturn {
     updateTransport,
     updateInstrumentParam,
     toggleStep,
+    chatMessages: roomState?.chatMessages || [],
+    sendChatMessage,
+    toggleSynthStep,
+    updateSynthParam,
   };
 }

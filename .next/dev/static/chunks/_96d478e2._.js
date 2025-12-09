@@ -10,10 +10,14 @@ __turbopack_context__.s([
     ()=>NUM_STEPS,
     "createDefaultInstrumentParams",
     ()=>createDefaultInstrumentParams,
+    "createDefaultSynthParams",
+    ()=>createDefaultSynthParams,
     "createDefaultTransport",
     ()=>createDefaultTransport,
     "createEmptyPattern",
     ()=>createEmptyPattern,
+    "createEmptySynthPattern",
+    ()=>createEmptySynthPattern,
     "generateRoomId",
     ()=>generateRoomId
 ]);
@@ -77,6 +81,23 @@ function generateRoomId() {
         result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return result;
+}
+function createEmptySynthPattern(steps = NUM_STEPS, rows = 1) {
+    return Array.from({
+        length: rows
+    }, ()=>Array.from({
+            length: steps
+        }, ()=>({
+                active: false,
+                note: 60
+            })));
+}
+function createDefaultSynthParams() {
+    return {
+        pitch: 0,
+        decay: 0.8,
+        timbre: 0.5
+    };
 }
 if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
     __turbopack_context__.k.registerExports(__turbopack_context__.m, globalThis.$RefreshHelpers$);
@@ -386,6 +407,7 @@ function useRoomSync(roomId) {
     const channelRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"])(null);
     const userIdRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"])(getUserId());
     const isLocalChangeRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"])(false); // Flag to prevent feedback loops
+    const chatMessagesRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"])([]); // Chat messages state (max 100)
     // Initialize room connection
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "useRoomSync.useEffect": ()=>{
@@ -499,15 +521,19 @@ function useRoomSync(roomId) {
                 return null;
             }
             if (data) {
-                // Room exists, return it
+                // Room exists, return it with defaults for new fields
                 return {
                     id: data.id,
-                    pattern: data.pattern,
+                    pattern: data.pattern || (0, __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["createEmptyPattern"])(),
                     transport: data.transport,
                     instruments: data.instruments,
                     participants: [],
                     createdAt: new Date(data.created_at).getTime(),
-                    lastActivity: new Date(data.last_activity).getTime()
+                    lastActivity: new Date(data.last_activity).getTime(),
+                    chatMessages: [],
+                    drumPattern: data.drum_pattern || data.pattern || (0, __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["createEmptyPattern"])(),
+                    synthPattern: data.synth_pattern || (0, __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["createEmptySynthPattern"])(),
+                    synthParams: data.synth_params || (0, __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["createDefaultSynthParams"])()
                 };
             }
             // Room doesn't exist, create default
@@ -518,7 +544,11 @@ function useRoomSync(roomId) {
                 instruments: (0, __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["createDefaultInstrumentParams"])(),
                 participants: [],
                 createdAt: Date.now(),
-                lastActivity: Date.now()
+                lastActivity: Date.now(),
+                chatMessages: [],
+                drumPattern: (0, __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["createEmptyPattern"])(),
+                synthPattern: (0, __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["createEmptySynthPattern"])(),
+                synthParams: (0, __TURBOPACK__imported__module__$5b$project$5d2f$types$2f$sequencer$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["createDefaultSynthParams"])()
             };
             // Save to Supabase
             const { error: insertError } = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$supabase$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["supabase"].from("rooms").insert({
@@ -526,6 +556,9 @@ function useRoomSync(roomId) {
                 pattern: newState.pattern,
                 transport: newState.transport,
                 instruments: newState.instruments,
+                drum_pattern: newState.drumPattern,
+                synth_pattern: newState.synthPattern,
+                synth_params: newState.synthParams,
                 created_at: new Date(newState.createdAt).toISOString(),
                 last_activity: new Date(newState.lastActivity).toISOString()
             });
@@ -634,6 +667,59 @@ function useRoomSync(roomId) {
                             }
                         case "full_sync":
                             return message.state;
+                        case "chat_message":
+                            {
+                                // Add chat message to state (limit to 100 messages)
+                                const currentMessages = prev.chatMessages || [];
+                                const newMessages = [
+                                    ...currentMessages,
+                                    message.message
+                                ];
+                                // Keep only last 100 messages
+                                const limitedMessages = newMessages.slice(-100);
+                                return {
+                                    ...prev,
+                                    chatMessages: limitedMessages,
+                                    lastActivity: message.message.timestamp
+                                };
+                            }
+                        case "synth_step_toggle":
+                            {
+                                const nextSynthPattern = prev.synthPattern.map({
+                                    "useRoomSync.useCallback[handleRemoteMessage].nextSynthPattern": (r)=>r.map({
+                                            "useRoomSync.useCallback[handleRemoteMessage].nextSynthPattern": (s)=>({
+                                                    ...s
+                                                })
+                                        }["useRoomSync.useCallback[handleRemoteMessage].nextSynthPattern"])
+                                }["useRoomSync.useCallback[handleRemoteMessage].nextSynthPattern"]);
+                                const step = nextSynthPattern[message.row]?.[message.col];
+                                if (step) {
+                                    if (step.active && step.note === message.note) {
+                                        // Toggle off if same note
+                                        step.active = false;
+                                    } else {
+                                        // Set note and activate
+                                        step.active = true;
+                                        step.note = message.note;
+                                    }
+                                }
+                                return {
+                                    ...prev,
+                                    synthPattern: nextSynthPattern,
+                                    lastActivity: message.timestamp
+                                };
+                            }
+                        case "synth_param_change":
+                            {
+                                return {
+                                    ...prev,
+                                    synthParams: {
+                                        ...prev.synthParams,
+                                        [message.field]: message.value
+                                    },
+                                    lastActivity: message.timestamp
+                                };
+                            }
                         default:
                             return prev;
                     }
@@ -790,6 +876,119 @@ function useRoomSync(roomId) {
         roomId,
         broadcastMessage
     ]);
+    // Send chat message
+    const sendChatMessage = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"])({
+        "useRoomSync.useCallback[sendChatMessage]": (text)=>{
+            if (!roomId || !text.trim()) return;
+            const message = {
+                id: `msg_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+                userId: userIdRef.current,
+                text: text.trim(),
+                timestamp: Date.now()
+            };
+            // Optimistically add to local state
+            setRoomState({
+                "useRoomSync.useCallback[sendChatMessage]": (prev)=>{
+                    if (!prev) return prev;
+                    const currentMessages = prev.chatMessages || [];
+                    const newMessages = [
+                        ...currentMessages,
+                        message
+                    ].slice(-100);
+                    return {
+                        ...prev,
+                        chatMessages: newMessages
+                    };
+                }
+            }["useRoomSync.useCallback[sendChatMessage]"]);
+            // Broadcast to room
+            broadcastMessage({
+                type: "chat_message",
+                message
+            });
+        }
+    }["useRoomSync.useCallback[sendChatMessage]"], [
+        roomId,
+        broadcastMessage
+    ]);
+    // Toggle synth sequencer step
+    const toggleSynthStep = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"])({
+        "useRoomSync.useCallback[toggleSynthStep]": (row, col, note)=>{
+            setRoomState({
+                "useRoomSync.useCallback[toggleSynthStep]": (prev)=>{
+                    if (!prev) return prev;
+                    const nextSynthPattern = prev.synthPattern.map({
+                        "useRoomSync.useCallback[toggleSynthStep].nextSynthPattern": (r)=>r.map({
+                                "useRoomSync.useCallback[toggleSynthStep].nextSynthPattern": (s)=>({
+                                        ...s
+                                    })
+                            }["useRoomSync.useCallback[toggleSynthStep].nextSynthPattern"])
+                    }["useRoomSync.useCallback[toggleSynthStep].nextSynthPattern"]);
+                    const step = nextSynthPattern[row]?.[col];
+                    if (step) {
+                        if (step.active && step.note === note) {
+                            // Toggle off if same note
+                            step.active = false;
+                        } else {
+                            // Set note and activate
+                            step.active = true;
+                            step.note = note;
+                        }
+                    }
+                    return {
+                        ...prev,
+                        synthPattern: nextSynthPattern,
+                        lastActivity: Date.now()
+                    };
+                }
+            }["useRoomSync.useCallback[toggleSynthStep]"]);
+            if (roomId) {
+                isLocalChangeRef.current = true;
+                broadcastMessage({
+                    type: "synth_step_toggle",
+                    row,
+                    col,
+                    note,
+                    userId: userIdRef.current,
+                    timestamp: Date.now()
+                });
+            }
+        }
+    }["useRoomSync.useCallback[toggleSynthStep]"], [
+        roomId,
+        broadcastMessage
+    ]);
+    // Update synth parameter
+    const updateSynthParam = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"])({
+        "useRoomSync.useCallback[updateSynthParam]": (field, value)=>{
+            setRoomState({
+                "useRoomSync.useCallback[updateSynthParam]": (prev)=>{
+                    if (!prev) return prev;
+                    return {
+                        ...prev,
+                        synthParams: {
+                            ...prev.synthParams,
+                            [field]: value
+                        },
+                        lastActivity: Date.now()
+                    };
+                }
+            }["useRoomSync.useCallback[updateSynthParam]"]);
+            if (roomId) {
+                isLocalChangeRef.current = true;
+                broadcastMessage({
+                    type: "synth_param_change",
+                    field,
+                    value,
+                    userId: userIdRef.current,
+                    timestamp: Date.now()
+                });
+            }
+        }
+    }["useRoomSync.useCallback[updateSynthParam]"], [
+        roomId,
+        broadcastMessage
+    ]);
     return {
         roomState,
         isConnected,
@@ -799,10 +998,14 @@ function useRoomSync(roomId) {
         updatePattern,
         updateTransport,
         updateInstrumentParam,
-        toggleStep
+        toggleStep,
+        chatMessages: roomState?.chatMessages || [],
+        sendChatMessage,
+        toggleSynthStep,
+        updateSynthParam
     };
 }
-_s(useRoomSync, "vyI6EAH5BfmPj/Rmi2iwi/S6xKU=");
+_s(useRoomSync, "iwIbZvh9nFMke+TNAw7OjCTu/jc=");
 if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
     __turbopack_context__.k.registerExports(__turbopack_context__.m, globalThis.$RefreshHelpers$);
 }
@@ -1631,7 +1834,7 @@ function SequencerPage() {
                                 children: "Intersymmetric Works"
                             }, void 0, false, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 143,
+                                lineNumber: 144,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
@@ -1639,13 +1842,13 @@ function SequencerPage() {
                                 children: "Sequencer 01"
                             }, void 0, false, {
                                 fileName: "[project]/app/page.tsx",
-                                lineNumber: 146,
+                                lineNumber: 147,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 142,
+                        lineNumber: 143,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$RoomControls$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["RoomControls"], {
@@ -1655,13 +1858,13 @@ function SequencerPage() {
                         onRoomChange: setRoomId
                     }, void 0, false, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 150,
+                        lineNumber: 151,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 141,
+                lineNumber: 142,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
@@ -1672,7 +1875,7 @@ function SequencerPage() {
                         children: roomSync.error
                     }, void 0, false, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 160,
+                        lineNumber: 161,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$TransportControls$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["TransportControls"], {
@@ -1686,7 +1889,7 @@ function SequencerPage() {
                         onTogglePlay: handleTransportChange.togglePlay
                     }, void 0, false, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 165,
+                        lineNumber: 166,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$PatternGrid$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["PatternGrid"], {
@@ -1697,7 +1900,7 @@ function SequencerPage() {
                         onInstrumentParamChange: handleInstrumentParamsChange
                     }, void 0, false, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 176,
+                        lineNumber: 177,
                         columnNumber: 9
                     }, this),
                     !engine.ready && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1705,7 +1908,7 @@ function SequencerPage() {
                         children: "Audio engine is loading in the background. You can already draw a pattern; sound will start once it is ready."
                     }, void 0, false, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 185,
+                        lineNumber: 186,
                         columnNumber: 11
                     }, this),
                     roomId && roomSync.isLoading && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1713,19 +1916,19 @@ function SequencerPage() {
                         children: "Connecting to room..."
                     }, void 0, false, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 192,
+                        lineNumber: 193,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 158,
+                lineNumber: 159,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/app/page.tsx",
-        lineNumber: 140,
+        lineNumber: 141,
         columnNumber: 5
     }, this);
 }

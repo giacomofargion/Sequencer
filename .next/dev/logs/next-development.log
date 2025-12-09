@@ -1,49 +1,50 @@
-[00:00:00.765] Server  LOG      ✓ Ready in 509ms
-[00:00:00.894] Server  WARN     ⚠ Cross origin request detected from 192.168.0.14 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+[00:00:00.460] Server  LOG      ✓ Ready in 321ms
+[00:00:02.050] Server  WARN     ⚠ Cross origin request detected from 192.168.0.14 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
 Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
-[00:00:02.941] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
-[00:00:03.641] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
-[00:00:08.110] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
-[00:00:11.714] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
-[00:00:30.059] Browser WARN    Events scheduled inside of scheduled callbacks should use the passed in scheduling time. See https://github.com/Tonejs/Tone.js/wiki/Accurate-Timing
-[00:00:30.147] Browser WARN    Events scheduled inside of scheduled callbacks should use the passed in scheduling time. See https://github.com/Tonejs/Tone.js/wiki/Accurate-Timing
-[00:01:42.000] Server  LOG      ✓ Compiled in 39ms
-[00:01:43.603] Server  LOG      ✓ Compiled in 18ms
-[00:01:49.670] Server  LOG      ✓ Compiled in 12ms
-[00:02:06.199] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
-[00:02:09.619] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
-[00:02:24.172] Browser WARN    Events scheduled inside of scheduled callbacks should use the passed in scheduling time. See https://github.com/Tonejs/Tone.js/wiki/Accurate-Timing
-[00:02:24.216] Browser WARN    Events scheduled inside of scheduled callbacks should use the passed in scheduling time. See https://github.com/Tonejs/Tone.js/wiki/Accurate-Timing
-[00:04:09.421] Server  LOG      ✓ Compiled in 11ms
-[00:04:09.501] Browser ERROR   uncaughtError: ReferenceError: onLoopWrap is not defined
-[00:04:09.536] Browser ERROR   uncaughtError: ReferenceError: onLoopWrap is not defined
-[00:04:11.741] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
-[00:04:11.814] Server  LOG      ✓ Compiled in 10ms
-[00:04:11.862] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
-[00:04:12.190] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
-[00:04:12.297] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
-[00:04:15.500] Server  LOG      ✓ Compiled in 11ms
-[00:04:17.687] Server  LOG      ✓ Compiled in 19ms
-[00:04:17.739] Browser ERROR   uncaughtError: ReferenceError: syncCurrentStep is not defined
-[00:04:17.804] Browser ERROR   uncaughtError: ReferenceError: syncCurrentStep is not defined
-[00:04:19.541] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
-[00:04:19.606] Server  LOG      ✓ Compiled in 10ms
-[00:04:19.655] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
-[00:04:19.922] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
-[00:04:20.039] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
-[00:04:26.680] Server  LOG      ✓ Compiled in 10ms
-[00:04:28.318] Server  LOG      ✓ Compiled in 9ms
-[00:04:29.996] Server  LOG      ✓ Compiled in 9ms
-[00:04:32.480] Server  LOG      ✓ Compiled in 9ms
-[00:04:34.555] Server  LOG      ✓ Compiled in 10ms
-[00:04:38.190] Server  LOG      ✓ Compiled in 9ms
-[00:04:41.564] Server  LOG      ✓ Compiled in 18ms
-[00:04:41.647] Browser ERROR   uncaughtError: ReferenceError: lastSyncedTempoRef is not defined
-[00:04:41.670] Browser ERROR   uncaughtError: ReferenceError: lastSyncedTempoRef is not defined
-[00:04:51.326] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
-[00:04:51.400] Server  LOG      ✓ Compiled in 10ms
-[00:04:51.451] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
-[00:04:51.731] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
-[00:04:51.832] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
-[00:06:32.815] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
-[00:06:45.656] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
+[00:00:02.298] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
+[00:00:03.067] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
+[00:00:10.486] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
+[00:08:29.359] Server  LOG      ✓ Compiled in 21ms
+[00:08:48.238] Server  LOG      ✓ Compiled in 12ms
+[00:09:43.238] Server  LOG      ✓ Compiled in 23ms
+[00:09:55.328] Server  LOG      ✓ Compiled in 11ms
+[00:09:59.268] Server  LOG      ✓ Compiled in 29ms
+[00:10:09.225] Server  LOG      ✓ Compiled in 13ms
+[00:10:16.516] Server  LOG      ✓ Compiled in 16ms
+[00:10:16.597] Browser ERROR   uncaughtError: RangeError: Value must be within [0, 1], got: undefined
+[00:10:17.031] Browser ERROR   uncaughtError: RangeError: Value must be within [0, 1], got: undefined
+[00:10:19.760] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:10:19.841] Server  LOG      ✓ Compiled in 43ms
+[00:10:19.897] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:10:20.227] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
+[00:10:21.038] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
+[00:10:27.816] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
+[00:11:07.342] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
+[00:12:20.360] Browser WARN    Events scheduled inside of scheduled callbacks should use the passed in scheduling time. See https://github.com/Tonejs/Tone.js/wiki/Accurate-Timing
+[00:12:20.395] Browser WARN    Events scheduled inside of scheduled callbacks should use the passed in scheduling time. See https://github.com/Tonejs/Tone.js/wiki/Accurate-Timing
+[00:17:49.253] Server  LOG      ✓ Compiled in 16ms
+[00:18:50.842] Server  LOG      ✓ Compiled in 21ms
+[00:18:54.098] Server  LOG      ✓ Compiled in 11ms
+[00:22:35.771] Server  LOG      ✓ Compiled in 147ms
+[00:22:40.806] Server  LOG      ✓ Compiled in 11ms
+[00:23:01.128] Server  LOG      ✓ Compiled in 17ms
+[00:23:24.064] Server  LOG      ✓ Compiled in 12ms
+[00:23:56.384] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
+[00:24:27.421] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
+[00:25:22.002] Browser WARN    Events scheduled inside of scheduled callbacks should use the passed in scheduling time. See https://github.com/Tonejs/Tone.js/wiki/Accurate-Timing
+[00:25:22.546] Browser WARN    Events scheduled inside of scheduled callbacks should use the passed in scheduling time. See https://github.com/Tonejs/Tone.js/wiki/Accurate-Timing
+[00:34:07.550] Server  LOG      ✓ Compiled in 23ms
+[00:34:12.561] Server  LOG      ✓ Compiled in 12ms
+[00:34:12.643] Browser ERROR   uncaughtError: ReferenceError: activeTab is not defined
+[00:34:54.421] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:34:54.445] Server  LOG      ✓ Compiled in 22ms
+[00:34:54.987] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
+[00:35:55.623] Browser WARN    Events scheduled inside of scheduled callbacks should use the passed in scheduling time. See https://github.com/Tonejs/Tone.js/wiki/Accurate-Timing
+[00:39:14.159] Server  LOG      ✓ Compiled in 46ms
+[00:39:16.115] Server  LOG      ✓ Compiled in 53ms
+[00:39:18.232] Server  LOG      ✓ Compiled in 20ms
+[00:39:20.292] Server  LOG      ✓ Compiled in 12ms
+[00:39:22.702] Server  LOG      ✓ Compiled in 12ms
+[00:39:27.907] Server  LOG      ✓ Compiled in 31ms
+[00:39:32.922] Server  LOG      ✓ Compiled in 20ms
+[00:39:37.229] Server  LOG      ✓ Compiled in 19ms

@@ -76,15 +76,39 @@ export type Participant = {
   joinedAt: number; // Timestamp
 };
 
+// Chat message type for real-time room chat
+export type ChatMessage = {
+  id: string; // Unique message ID
+  userId: string; // Sender's user ID
+  userName?: string; // Optional display name
+  text: string; // Message content
+  timestamp: number; // When message was sent
+};
+
 export type RoomState = {
   id: RoomId;
-  pattern: Pattern;
+  pattern: Pattern; // Drum sequencer pattern (renamed from pattern for clarity)
   transport: TransportState;
   instruments: InstrumentParamMap;
   participants: Participant[];
   createdAt: number;
   lastActivity: number;
+  chatMessages: ChatMessage[]; // Real-time chat messages (not persisted)
+  // Multi-instrument support
+  drumPattern: Pattern; // Explicit drum sequencer pattern
+  synthPattern: SynthPattern; // Synthesizer sequencer pattern
+  synthParams: SynthParams; // Global synth parameters
 };
+
+// Multi-instrument types
+export type InstrumentType = "drum_sequencer" | "synth_sequencer";
+
+export type SynthStepState = {
+  active: boolean;
+  note: number; // MIDI note (0-127)
+};
+
+export type SynthPattern = SynthStepState[][];
 
 export type SyncMessage =
   | { type: "step_toggle"; row: number; col: number; userId: string; timestamp: number }
@@ -102,7 +126,16 @@ export type SyncMessage =
     }
   | { type: "participant_join"; participant: Participant }
   | { type: "participant_leave"; participantId: string }
-  | { type: "full_sync"; state: RoomState }; // Initial sync on join
+  | { type: "full_sync"; state: RoomState } // Initial sync on join
+  | { type: "chat_message"; message: ChatMessage } // Chat message
+  | { type: "synth_step_toggle"; row: number; col: number; note: number; userId: string; timestamp: number } // Synth sequencer step toggle
+  | {
+      type: "synth_param_change";
+      field: keyof SynthParams;
+      value: number;
+      userId: string;
+      timestamp: number;
+    }; // Synth parameter change
 
 // Generate a random room ID (6 alphanumeric characters)
 export function generateRoomId(): RoomId {
@@ -112,4 +145,53 @@ export function generateRoomId(): RoomId {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return result;
+}
+
+// Helper to create empty synth pattern
+// 12 rows for chromatic scale (C, C#, D, D#, E, F, F#, G, G#, A, A#, B)
+export function createEmptySynthPattern(steps: number = NUM_STEPS, rows: number = 12): SynthPattern {
+  return Array.from({ length: rows }, () =>
+    Array.from({ length: steps }, () => ({ active: false, note: 60 })), // Note will be calculated from row + octave
+  );
+}
+
+// Advanced FM synth parameters
+export type SynthParams = {
+  // Pitch
+  pitch: number; // Global pitch offset in semitones
+  detune: number; // Fine detune in cents
+
+  // Envelope (ADSR)
+  attack: number; // Attack time in seconds
+  decay: number; // Decay time in seconds
+  sustain: number; // Sustain level (0-1)
+  release: number; // Release time in seconds
+
+  // FM Modulation
+  harmonicity: number; // Ratio between carrier and modulator (0.1-20)
+  modulationIndex: number; // Modulation depth (0-50)
+
+  // Modulation Envelope
+  modAttack: number; // Modulation attack time
+  modDecay: number; // Modulation decay time
+  modSustain: number; // Modulation sustain level
+  modRelease: number; // Modulation release time
+};
+
+// Helper to create default synth params
+export function createDefaultSynthParams(): SynthParams {
+  return {
+    pitch: 0,
+    detune: 0,
+    attack: 0.01,
+    decay: 0.3,
+    sustain: 0.1,
+    release: 0.2,
+    harmonicity: 3,
+    modulationIndex: 10,
+    modAttack: 0.01,
+    modDecay: 0.3,
+    modSustain: 0.5,
+    modRelease: 0.2,
+  };
 }
