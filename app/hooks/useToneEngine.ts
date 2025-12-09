@@ -8,6 +8,8 @@ import type {
   InstrumentParamMap,
   Pattern,
   TransportState,
+  SynthPattern,
+  SynthParams,
 } from "@/types/sequencer";
 
 export type ToneEngineApi = {
@@ -18,12 +20,16 @@ export type ToneEngineApi = {
   togglePlay: () => void;
   updatePattern: (pattern: Pattern) => void;
   updateInstrumentParams: (params: InstrumentParamMap) => void;
+  updateSynthPattern: (synthPattern: SynthPattern) => void;
+  updateSynthParams: (params: SynthParams) => void;
 };
 
 export function useToneEngine(
   initialTransport: TransportState,
   initialPattern: Pattern,
   initialParams: InstrumentParamMap,
+  initialSynthPattern?: SynthPattern,
+  initialSynthParams?: SynthParams,
 ): ToneEngineApi {
   const [transport, setTransport] = useState<TransportState>(initialTransport);
   const [ready, setReady] = useState(false);
@@ -31,8 +37,28 @@ export function useToneEngine(
   const toneRef = useRef<ToneType | null>(null);
   const patternRef = useRef<Pattern>(initialPattern);
   const paramsRef = useRef<InstrumentParamMap>(initialParams);
+  const synthPatternRef = useRef<SynthPattern>(
+    initialSynthPattern || Array.from({ length: 12 }, () => Array.from({ length: 16 }, () => ({ active: false, note: 60 }))),
+  );
+  const synthParamsRef = useRef<SynthParams>(
+    initialSynthParams || {
+      pitch: 0,
+      detune: 0,
+      attack: 0.01,
+      decay: 0.3,
+      sustain: 0.1,
+      release: 0.2,
+      harmonicity: 3,
+      modulationIndex: 10,
+      modAttack: 0.01,
+      modDecay: 0.3,
+      modSustain: 0.5,
+      modRelease: 0.2,
+    },
+  );
   const synthsRef =
     useRef<Partial<Record<InstrumentId, ToneType.ToneAudioNode>>>();
+  const synthSequencerRef = useRef<ToneType.FMSynth | null>(null);
   const loopIdRef = useRef<string | number | null>(null);
   const currentStepRef = useRef<number>(initialTransport.startStep);
 
@@ -58,10 +84,21 @@ export function useToneEngine(
         tom: new tone.MembraneSynth({
           pitchDecay: 0.08,
         }).toDestination(),
-        synth: new tone.FMSynth().toDestination(),
+        clap: new tone.NoiseSynth({
+          envelope: { attack: 0.001, decay: 0.15, sustain: 0 },
+        }).toDestination(),
       };
 
+      // Separate FMSynth for synth sequencer (different from drum "synth" instrument)
+      const synthSequencer = new tone.FMSynth({
+        envelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 0.2 },
+        modulationEnvelope: { attack: 0.01, decay: 0.3, sustain: 0.5, release: 0.2 },
+        harmonicity: 3,
+        modulationIndex: 10,
+      }).toDestination();
+
       synthsRef.current = synths;
+      synthSequencerRef.current = synthSequencer;
       tone.Transport.bpm.value = initialTransport.tempo;
 
       const instrumentsOrder: InstrumentId[] = [
@@ -69,7 +106,7 @@ export function useToneEngine(
         "snare",
         "hihat",
         "tom",
-        "synth",
+        "clap",
       ];
 
       loopIdRef.current = tone.Transport.scheduleRepeat((time) => {
@@ -78,6 +115,7 @@ export function useToneEngine(
 
         const stepIndex = currentStepRef.current;
 
+        // Trigger drum sequencer instruments
         patternRef.current.forEach((row, rowIndex) => {
           const step = row[stepIndex];
           if (!step?.active) return;
@@ -96,6 +134,33 @@ export function useToneEngine(
             time as unknown as number,
           );
         });
+
+        // Trigger synth sequencer
+        const synthPattern = synthPatternRef.current;
+        const synthParams = synthParamsRef.current;
+        const synthSequencer = synthSequencerRef.current;
+        if (synthSequencer && synthPattern) {
+          synthPattern.forEach((row) => {
+            const step = row[stepIndex];
+            if (step?.active) {
+              // Convert MIDI note to frequency
+              const midiNote = step.note;
+              const frequency = toneModule.Frequency(midiNote, "midi").toFrequency();
+              // Apply global pitch offset and detune
+              const pitchOffset = synthParams.pitch;
+              const detuneCents = synthParams.detune;
+              let finalFreq = toneModule.Frequency(frequency).transpose(pitchOffset).toFrequency();
+              // Apply detune (cents)
+              if (detuneCents !== 0) {
+                finalFreq = finalFreq * Math.pow(2, detuneCents / 1200);
+              }
+              // Calculate note duration from envelope
+              const noteDuration = synthParams.attack + synthParams.decay + synthParams.release;
+              // Trigger with full envelope
+              synthSequencer.triggerAttackRelease(finalFreq, noteDuration, time as unknown as number);
+            }
+          });
+        }
 
         setTransport((prev) => {
           const nextIndex =
@@ -206,16 +271,43 @@ export function useToneEngine(
         metal.set({ harmonicity: 1 + timbre * 19 });
         // Also modulate resonance for more character.
         metal.set({ resonance: 200 + timbre * 800 });
-      } else if (id === "synth") {
-        const fm = synth as unknown as ToneType.FMSynth;
-        fm.envelope.decay = decay;
-        // Harmonicity range expanded (0.5 to 8) for more dramatic FM timbres.
-        fm.set({ harmonicity: 0.5 + timbre * 7.5 });
-        // Modulation index is key to FM character - wide range (0.1 to 20) makes timbre very noticeable.
-        fm.set({ modulationIndex: 0.1 + timbre * 19.9 });
-        fm.detune.value = pitch * 10;
+      } else if (id === "clap") {
+        const noise = synth as unknown as ToneType.NoiseSynth;
+        noise.envelope.decay = decay;
+        // Timbre modulates volume for clap: low = thinner, high = punchier
+        noise.volume.value = (timbre - 0.5) * 20;
       }
     });
+  };
+
+  const updateSynthPattern = (synthPattern: SynthPattern) => {
+    synthPatternRef.current = synthPattern;
+  };
+
+  const updateSynthParams = (params: SynthParams) => {
+    synthParamsRef.current = params;
+
+    const synthSequencer = synthSequencerRef.current;
+    if (!synthSequencer) return;
+
+    // Apply envelope parameters
+    synthSequencer.envelope.attack = params.attack;
+    synthSequencer.envelope.decay = params.decay;
+    synthSequencer.envelope.sustain = params.sustain;
+    synthSequencer.envelope.release = params.release;
+
+    // Apply modulation envelope
+    synthSequencer.modulationEnvelope.attack = params.modAttack;
+    synthSequencer.modulationEnvelope.decay = params.modDecay;
+    synthSequencer.modulationEnvelope.sustain = params.modSustain;
+    synthSequencer.modulationEnvelope.release = params.modRelease;
+
+    // Apply FM parameters
+    synthSequencer.set({ harmonicity: params.harmonicity });
+    synthSequencer.set({ modulationIndex: params.modulationIndex });
+
+    // Detune is applied per-note in the transport loop
+    // Pitch offset is also applied per-note in the transport loop
   };
 
   return {
@@ -226,6 +318,8 @@ export function useToneEngine(
     togglePlay,
     updatePattern,
     updateInstrumentParams,
+    updateSynthPattern,
+    updateSynthParams,
   };
 }
 
@@ -254,11 +348,7 @@ function triggerInstrument(
     (synth as ToneType.NoiseSynth).triggerAttackRelease(decay, time);
   } else if (id === "hihat") {
     (synth as ToneType.MetalSynth).triggerAttackRelease(decay, time);
-  } else if (id === "synth") {
-    (synth as ToneType.FMSynth).triggerAttackRelease(
-      tone.Frequency("C4").transpose(pitch).toFrequency(),
-      decay,
-      time,
-    );
+  } else if (id === "clap") {
+    (synth as ToneType.NoiseSynth).triggerAttackRelease(decay, time);
   }
 }

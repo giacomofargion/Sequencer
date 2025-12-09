@@ -1,30 +1,64 @@
-[00:00:00.534] Server  LOG      ✓ Ready in 348ms
-[00:00:01.977] Server  WARN     ⚠ Cross origin request detected from 192.168.0.14 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+[00:00:00.748] Server  LOG      ✓ Ready in 505ms
+[00:00:04.387] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
+[00:00:13.624] Server  WARN     ⚠ Cross origin request detected from 192.168.0.14 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
 Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
-[00:00:04.956] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
-[00:00:04.978] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
-[00:00:11.480] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
-[00:00:36.716] Browser WARN    Events scheduled inside of scheduled callbacks should use the passed in scheduling time. See https://github.com/Tonejs/Tone.js/wiki/Accurate-Timing
-[00:00:36.901] Browser WARN    Events scheduled inside of scheduled callbacks should use the passed in scheduling time. See https://github.com/Tonejs/Tone.js/wiki/Accurate-Timing
-[00:14:24.695] Server  LOG      ✓ Compiled in 325ms
-[00:14:25.979] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
-[00:14:35.579] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
-[00:14:37.747] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
-[00:14:46.598] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
-[00:17:05.715] Browser WARN    Events scheduled inside of scheduled callbacks should use the passed in scheduling time. See https://github.com/Tonejs/Tone.js/wiki/Accurate-Timing
-[00:17:05.895] Browser WARN    Events scheduled inside of scheduled callbacks should use the passed in scheduling time. See https://github.com/Tonejs/Tone.js/wiki/Accurate-Timing
-[00:17:12.619] Server  LOG      ✓ Compiled in 27ms
-[00:17:43.837] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
-[00:17:56.314] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
-[00:20:47.171] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
-[00:20:51.661] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
-[00:21:22.118] Browser WARN    Events scheduled inside of scheduled callbacks should use the passed in scheduling time. See https://github.com/Tonejs/Tone.js/wiki/Accurate-Timing
-[00:21:22.322] Browser WARN    Events scheduled inside of scheduled callbacks should use the passed in scheduling time. See https://github.com/Tonejs/Tone.js/wiki/Accurate-Timing
-[00:23:41.320] Server  LOG      ✓ Compiled in 16ms
-[00:24:04.011] Server  LOG      ✓ Compiled in 30ms
-[00:25:00.421] Server  LOG      ✓ Compiled in 13ms
-[00:25:02.221] Server  LOG      ✓ Compiled in 12ms
-[00:26:01.666] Server  LOG      ✓ Compiled in 14ms
-[00:26:45.786] Server  LOG      ✓ Compiled in 14ms
-[00:27:15.635] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
-[00:27:18.583] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
+[00:00:13.964] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
+[00:05:43.697] Server  LOG      ✓ Compiled in 60ms
+[00:05:43.785] Browser ERROR   uncaughtError: TypeError: Cannot read properties of undefined (reading 'pitch')
+[00:05:44.699] Browser ERROR   uncaughtError: TypeError: Cannot read properties of undefined (reading 'pitch')
+[00:05:51.371] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:05:51.471] Server  LOG      ✓ Compiled in 16ms
+[00:05:51.533] Server  ERROR    ⨯ TypeError: Cannot read properties of undefined (reading 'pitch')
+[00:05:51.541] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:05:51.543] Browser ERROR   uncaughtError: TypeError: Cannot read properties of undefined (reading 'pitch')
+[00:05:51.590] Server  ERROR    ⨯ TypeError: Cannot read properties of undefined (reading 'pitch')
+[00:05:51.835] Browser ERROR   uncaughtError: TypeError: Cannot read properties of undefined (reading 'pitch')
+[00:05:52.702] Browser ERROR   uncaughtError: TypeError: Cannot read properties of undefined (reading 'pitch')
+[00:05:52.888] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:05:52.914] Server  ERROR    ⨯ TypeError: Cannot read properties of undefined (reading 'pitch')
+[00:05:52.922] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:05:52.948] Server  ERROR    ⨯ TypeError: Cannot read properties of undefined (reading 'pitch')
+[00:05:52.959] Server  LOG      ✓ Compiled in 15ms
+[00:05:53.146] Browser ERROR   uncaughtError: TypeError: Cannot read properties of undefined (reading 'pitch')
+[00:05:53.692] Browser ERROR   uncaughtError: TypeError: Cannot read properties of undefined (reading 'pitch')
+[00:05:58.146] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:05:58.203] Server  LOG      ✓ Compiled in 15ms
+[00:05:58.256] Server  ERROR    ⨯ TypeError: Cannot read properties of undefined (reading 'pitch')
+[00:05:58.263] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:05:58.299] Server  ERROR    ⨯ TypeError: Cannot read properties of undefined (reading 'pitch')
+[00:05:58.499] Browser ERROR   uncaughtError: TypeError: Cannot read properties of undefined (reading 'pitch')
+[00:05:58.692] Browser ERROR   uncaughtError: TypeError: Cannot read properties of undefined (reading 'pitch')
+[00:06:00.713] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:06:00.814] Server  LOG      ✓ Compiled in 13ms
+[00:06:00.869] Server  ERROR    ⨯ TypeError: Cannot read properties of undefined (reading 'pitch')
+[00:06:00.881] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:06:00.913] Server  ERROR    ⨯ TypeError: Cannot read properties of undefined (reading 'pitch')
+[00:06:01.110] Browser ERROR   uncaughtError: TypeError: Cannot read properties of undefined (reading 'pitch')
+[00:06:01.700] Browser ERROR   uncaughtError: TypeError: Cannot read properties of undefined (reading 'pitch')
+[00:06:02.044] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:06:02.104] Server  LOG      ✓ Compiled in 32ms
+[00:06:02.155] Server  ERROR    ⨯ TypeError: Cannot read properties of undefined (reading 'pitch')
+[00:06:02.162] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:06:02.164] Browser ERROR   unhandledRejection: Error: No link element found for chunk /_next/static/chunks/app_globals_71f961d1.css
+[00:06:02.204] Server  ERROR    ⨯ TypeError: Cannot read properties of undefined (reading 'pitch')
+[00:06:02.401] Browser ERROR   uncaughtError: TypeError: Cannot read properties of undefined (reading 'pitch')
+[00:06:02.692] Browser ERROR   uncaughtError: TypeError: Cannot read properties of undefined (reading 'pitch')
+[00:06:18.074] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:06:18.139] Server  LOG      ✓ Compiled in 14ms
+[00:06:18.198] Server  WARN     ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:06:18.468] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
+[00:06:18.692] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
+[00:06:25.143] Server  LOG      ✓ Compiled in 14ms
+[00:06:29.276] Server  LOG      ✓ Compiled in 12ms
+[00:06:32.253] Server  LOG      ✓ Compiled in 15ms
+[00:06:39.904] Server  LOG      ✓ Compiled in 34ms
+[00:06:54.203] Server  LOG      ✓ Compiled in 22ms
+[00:07:04.750] Server  LOG      ✓ Compiled in 13ms
+[00:07:06.599] Server  LOG      ✓ Compiled in 12ms
+[00:07:07.774] Server  LOG      ✓ Compiled in 11ms
+[00:07:09.783] Server  LOG      ✓ Compiled in 12ms
+[00:07:21.953] Server  LOG      ✓ Compiled in 16ms
+[00:07:25.398] Server  LOG      ✓ Compiled in 12ms
+[00:08:36.764] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
+[00:09:30.965] Browser WARN    Events scheduled inside of scheduled callbacks should use the passed in scheduling time. See https://github.com/Tonejs/Tone.js/wiki/Accurate-Timing
+[00:09:31.586] Browser WARN    Events scheduled inside of scheduled callbacks should use the passed in scheduling time. See https://github.com/Tonejs/Tone.js/wiki/Accurate-Timing

@@ -29,12 +29,29 @@ export async function GET(
 
     const roomState: RoomState = {
       id: data.id,
-      pattern: data.pattern,
+      pattern: data.pattern || data.drum_pattern || [],
       transport: data.transport,
       instruments: data.instruments,
       participants: [], // Participants managed via presence, not DB
       createdAt: new Date(data.created_at).getTime(),
       lastActivity: new Date(data.last_activity).getTime(),
+      chatMessages: [], // Chat messages are real-time only, not persisted
+      drumPattern: data.drum_pattern || data.pattern || [],
+      synthPattern: data.synth_pattern || [],
+      synthParams: data.synth_params || {
+        pitch: 0,
+        detune: 0,
+        attack: 0.01,
+        decay: 0.3,
+        sustain: 0.1,
+        release: 0.2,
+        harmonicity: 3,
+        modulationIndex: 10,
+        modAttack: 0.01,
+        modDecay: 0.3,
+        modSustain: 0.5,
+        modRelease: 0.2,
+      },
     };
 
     return NextResponse.json(roomState);
@@ -52,14 +69,17 @@ export async function PUT(
 
   try {
     const body = await request.json();
-    const { pattern, transport, instruments } = body;
+    const { pattern, transport, instruments, drumPattern, synthPattern, synthParams } = body;
 
     const { error } = await supabase
       .from("rooms")
       .update({
-        pattern,
+        pattern: pattern || drumPattern, // Support both for backward compatibility
+        drum_pattern: drumPattern || pattern,
         transport,
         instruments,
+        synth_pattern: synthPattern,
+        synth_params: synthParams,
         last_activity: new Date().toISOString(),
       })
       .eq("id", roomId);
