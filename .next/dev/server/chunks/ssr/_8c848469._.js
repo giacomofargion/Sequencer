@@ -12,7 +12,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
 ;
 ;
 const metadata = {
-    title: "Sequencer 01",
+    title: "Fargion Sequencer",
     description: "Step sequencer built with Next.js, Tone.js, and Tailwind v4"
 };
 function RootLayout({ children }) {

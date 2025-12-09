@@ -2,7 +2,7 @@ import "./globals.css";
 import type { ReactNode } from "react";
 
 export const metadata = {
-  title: "Sequencer 01",
+  title: "Fargion Sequencer",
   description: "Step sequencer built with Next.js, Tone.js, and Tailwind v4",
 };
 

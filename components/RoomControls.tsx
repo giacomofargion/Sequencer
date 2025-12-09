@@ -62,11 +62,11 @@ export const RoomControls: FC<Props> = ({
   };
 
   return (
-    <div className="flex items-center gap-3 text-xs text-neutral-500">
-      <div className="flex items-center gap-2">
-        <span>Room Code:</span>
+    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 text-xs text-neutral-500">
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="whitespace-nowrap">Room Code:</span>
         {roomId ? (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="font-mono text-[11px] tracking-widest text-neutral-700">
               {roomId}
             </span>
@@ -86,7 +86,7 @@ export const RoomControls: FC<Props> = ({
       </div>
 
       {/* User Name */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         {userName ? (
           <div className="flex items-center gap-1">
             <span className="text-[10px] text-neutral-600">Name:</span>
@@ -151,7 +151,7 @@ export const RoomControls: FC<Props> = ({
         )}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         {!roomId ? (
           <>
             <button
@@ -159,14 +159,14 @@ export const RoomControls: FC<Props> = ({
               onClick={handleCreateRoom}
               className="rounded border border-neutral-300 bg-white px-2 py-1 text-[10px] uppercase tracking-[0.1em] transition hover:bg-neutral-50"
             >
-              Create
+              Create Room
             </button>
             <button
               type="button"
               onClick={() => setShowInput(!showInput)}
               className="rounded border border-neutral-300 bg-white px-2 py-1 text-[10px] uppercase tracking-[0.1em] transition hover:bg-neutral-50"
             >
-              Join
+              Join Room
             </button>
           </>
         ) : (
