@@ -122,7 +122,7 @@ export const SynthPatternGrid: FC<Props> = ({
           FM Synthesis Parameters
         </div>
 
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+        <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 justify-items-center">
           {/* Pitch Section */}
           <div className="space-y-2">
             <div className="text-xs font-semibold text-neutral-700 mb-2 uppercase tracking-wide">

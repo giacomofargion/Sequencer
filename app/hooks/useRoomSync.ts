@@ -46,7 +46,9 @@ type UseRoomSyncReturn = {
   sendChatMessage: (text: string) => void;
   // Synth sequencer functionality
   toggleSynthStep: (row: number, col: number, note: number) => void;
-  updateSynthParam: (field: "pitch" | "decay" | "timbre", value: number) => void;
+  updateSynthParam: (field: keyof RoomState["synthParams"], value: number) => void;
+  // Update presence with new name
+  updatePresence: () => void;
 };
 
 // Generate a unique user ID for this session (stored in localStorage)
@@ -58,6 +60,20 @@ function getUserId(): string {
     localStorage.setItem("sequencer_user_id", newId);
   }
   return newId;
+}
+
+// Get or set user name (stored in localStorage)
+export function getUserName(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("sequencer_user_name");
+}
+
+export function setUserName(name: string): void {
+  if (typeof window === "undefined") return;
+  const trimmed = name.trim();
+  if (trimmed.length > 0 && trimmed.length <= 20) {
+    localStorage.setItem("sequencer_user_name", trimmed);
+  }
 }
 
 export function useRoomSync(roomId: RoomId | null): UseRoomSyncReturn {
@@ -133,8 +149,10 @@ export function useRoomSync(roomId: RoomId | null): UseRoomSyncReturn {
         setIsLoading(false);
         if (status === "SUBSCRIBED") {
           // Join presence
+          const userName = getUserName();
           const participant: Participant = {
             id: userIdRef.current,
+            name: userName || undefined,
             joinedAt: Date.now(),
           };
           channel.track(participant);
@@ -539,9 +557,11 @@ export function useRoomSync(roomId: RoomId | null): UseRoomSyncReturn {
     (text: string) => {
       if (!roomId || !text.trim()) return;
 
+      const userName = getUserName();
       const message: ChatMessage = {
         id: `msg_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         userId: userIdRef.current,
+        userName: userName || undefined,
         text: text.trim(),
         timestamp: Date.now(),
       };
@@ -634,6 +654,20 @@ export function useRoomSync(roomId: RoomId | null): UseRoomSyncReturn {
     [roomId, broadcastMessage],
   );
 
+  // Update presence with current name
+  const updatePresence = useCallback(() => {
+    const channel = channelRef.current;
+    if (!channel || !roomId) return;
+
+    const userName = getUserName();
+    const participant: Participant = {
+      id: userIdRef.current,
+      name: userName || undefined,
+      joinedAt: Date.now(),
+    };
+    channel.track(participant);
+  }, [roomId]);
+
   return {
     roomState,
     isConnected,
@@ -648,5 +682,6 @@ export function useRoomSync(roomId: RoomId | null): UseRoomSyncReturn {
     sendChatMessage,
     toggleSynthStep,
     updateSynthParam,
+    updatePresence,
   };
 }

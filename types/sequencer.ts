@@ -1,13 +1,13 @@
 // Core data model for the step sequencer lives here so UI and audio can share it.
 
-export type InstrumentId = "kick" | "snare" | "hihat" | "tom" | "synth";
+export type InstrumentId = "kick" | "snare" | "hihat" | "tom" | "clap";
 
 export const INSTRUMENTS: InstrumentId[] = [
   "kick",
   "snare",
   "hihat",
   "tom",
-  "synth",
+  "clap",
 ];
 
 export type StepState = {
@@ -63,7 +63,7 @@ export function createDefaultInstrumentParams(): InstrumentParamMap {
     snare: { pitch: 0, decay: 0.4, timbre: 0.7 },
     hihat: { pitch: 12, decay: 0.2, timbre: 0.8 },
     tom: { pitch: -5, decay: 0.5, timbre: 0.6 },
-    synth: { pitch: 0, decay: 0.8, timbre: 0.5 },
+    clap: { pitch: 0, decay: 0.3, timbre: 0.6 },
   };
 }
 

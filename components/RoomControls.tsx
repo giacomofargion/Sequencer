@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { FC } from "react";
 import { generateRoomId, type RoomId } from "@/types/sequencer";
+import { getUserName, setUserName } from "@/app/hooks/useRoomSync";
 
 type Props = {
   roomId: RoomId | null;
   isConnected: boolean;
   participantCount: number;
   onRoomChange: (roomId: RoomId | null) => void;
+  onNameChange?: () => void;
 };
 
 export const RoomControls: FC<Props> = ({
@@ -16,9 +18,28 @@ export const RoomControls: FC<Props> = ({
   isConnected,
   participantCount,
   onRoomChange,
+  onNameChange,
 }) => {
   const [inputValue, setInputValue] = useState("");
   const [showInput, setShowInput] = useState(false);
+  const [showNameInput, setShowNameInput] = useState(false);
+  const [nameInput, setNameInput] = useState("");
+  const [userName, setUserNameState] = useState<string | null>(null);
+
+  useEffect(() => {
+    setUserNameState(getUserName());
+  }, []);
+
+  const handleSetName = () => {
+    const trimmed = nameInput.trim();
+    if (trimmed.length > 0 && trimmed.length <= 20) {
+      setUserName(trimmed);
+      setUserNameState(trimmed);
+      setNameInput("");
+      setShowNameInput(false);
+      onNameChange?.();
+    }
+  };
 
   const handleCreateRoom = () => {
     const newRoomId = generateRoomId();
@@ -61,6 +82,72 @@ export const RoomControls: FC<Props> = ({
           </div>
         ) : (
           <span className="font-mono text-[11px] tracking-widest text-neutral-400">solo</span>
+        )}
+      </div>
+
+      {/* User Name */}
+      <div className="flex items-center gap-2">
+        {userName ? (
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] text-neutral-600">Name:</span>
+            <span className="text-[11px] font-medium text-neutral-700">{userName}</span>
+            <button
+              type="button"
+              onClick={() => {
+                setShowNameInput(true);
+                setNameInput(userName);
+              }}
+              className="text-[9px] text-neutral-400 hover:text-neutral-600"
+              title="Change name"
+            >
+              ✎
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowNameInput(true)}
+            className="text-[10px] text-neutral-500 hover:text-neutral-700 underline"
+          >
+            Set Name
+          </button>
+        )}
+        {showNameInput && (
+          <div className="flex items-center gap-1">
+            <input
+              type="text"
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSetName();
+                if (e.key === "Escape") {
+                  setShowNameInput(false);
+                  setNameInput("");
+                }
+              }}
+              placeholder="Your name"
+              maxLength={20}
+              className="w-24 rounded border border-neutral-300 bg-white px-2 py-1 text-[11px] focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              autoFocus
+            />
+            <button
+              type="button"
+              onClick={handleSetName}
+              className="rounded border border-neutral-300 bg-white px-2 py-1 text-[10px] uppercase tracking-[0.1em] transition hover:bg-neutral-50"
+            >
+              Save
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowNameInput(false);
+                setNameInput("");
+              }}
+              className="text-[10px] text-neutral-400 hover:text-neutral-600"
+            >
+              ✕
+            </button>
+          </div>
         )}
       </div>
 

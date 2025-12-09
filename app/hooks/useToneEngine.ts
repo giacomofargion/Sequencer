@@ -84,7 +84,9 @@ export function useToneEngine(
         tom: new tone.MembraneSynth({
           pitchDecay: 0.08,
         }).toDestination(),
-        synth: new tone.FMSynth().toDestination(),
+        clap: new tone.NoiseSynth({
+          envelope: { attack: 0.001, decay: 0.15, sustain: 0 },
+        }).toDestination(),
       };
 
       // Separate FMSynth for synth sequencer (different from drum "synth" instrument)
@@ -104,7 +106,7 @@ export function useToneEngine(
         "snare",
         "hihat",
         "tom",
-        "synth",
+        "clap",
       ];
 
       loopIdRef.current = tone.Transport.scheduleRepeat((time) => {
@@ -269,14 +271,11 @@ export function useToneEngine(
         metal.set({ harmonicity: 1 + timbre * 19 });
         // Also modulate resonance for more character.
         metal.set({ resonance: 200 + timbre * 800 });
-      } else if (id === "synth") {
-        const fm = synth as unknown as ToneType.FMSynth;
-        fm.envelope.decay = decay;
-        // Harmonicity range expanded (0.5 to 8) for more dramatic FM timbres.
-        fm.set({ harmonicity: 0.5 + timbre * 7.5 });
-        // Modulation index is key to FM character - wide range (0.1 to 20) makes timbre very noticeable.
-        fm.set({ modulationIndex: 0.1 + timbre * 19.9 });
-        fm.detune.value = pitch * 10;
+      } else if (id === "clap") {
+        const noise = synth as unknown as ToneType.NoiseSynth;
+        noise.envelope.decay = decay;
+        // Timbre modulates volume for clap: low = thinner, high = punchier
+        noise.volume.value = (timbre - 0.5) * 20;
       }
     });
   };
@@ -349,11 +348,7 @@ function triggerInstrument(
     (synth as ToneType.NoiseSynth).triggerAttackRelease(decay, time);
   } else if (id === "hihat") {
     (synth as ToneType.MetalSynth).triggerAttackRelease(decay, time);
-  } else if (id === "synth") {
-    (synth as ToneType.FMSynth).triggerAttackRelease(
-      tone.Frequency("C4").transpose(pitch).toFrequency(),
-      decay,
-      time,
-    );
+  } else if (id === "clap") {
+    (synth as ToneType.NoiseSynth).triggerAttackRelease(decay, time);
   }
 }

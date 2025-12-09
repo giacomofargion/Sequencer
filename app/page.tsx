@@ -224,6 +224,12 @@ export default function SequencerPage() {
           isConnected={roomSync.isConnected}
           participantCount={roomSync.participants.length + (roomId ? 1 : 0)}
           onRoomChange={setRoomId}
+          onNameChange={() => {
+            // Update presence when name changes
+            if (roomId) {
+              roomSync.updatePresence();
+            }
+          }}
         />
       </header>
 
