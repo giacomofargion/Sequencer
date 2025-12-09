@@ -210,13 +210,13 @@ export default function SequencerPage() {
 
   return (
     <main className="flex flex-1 flex-col gap-4">
-      <header className="flex items-baseline justify-between border-b border-neutral-300 pb-4">
+      <header className="flex flex-col sm:flex-row items-start sm:items-baseline justify-between gap-3 sm:gap-4 border-b border-neutral-300 pb-4">
         <div>
           <p className="text-xs uppercase tracking-[0.25em] text-neutral-500">
-            Intersymmetric Works
+            Fargion
           </p>
           <h1 className="text-sm font-medium tracking-[0.18em] text-neutral-800">
-            Sequencer 01
+            Sequencer
           </h1>
         </div>
         <RoomControls
@@ -247,9 +247,13 @@ export default function SequencerPage() {
             endStep={engine.transport.endStep}
             maxSteps={NUM_STEPS}
             isPlaying={engine.transport.isPlaying}
+            isRecording={engine.isRecording}
+            isReady={engine.ready}
             onTempoChange={handleTransportChange.tempo}
             onRangeChange={handleTransportChange.range}
             onTogglePlay={handleTransportChange.togglePlay}
+            onStartRecording={engine.startRecording}
+            onStopRecording={engine.stopRecording}
           />
 
           {/* Instrument view selector */}
@@ -312,7 +316,7 @@ export default function SequencerPage() {
         </section>
 
         {roomId && (
-          <aside className="w-80 flex-shrink-0">
+          <aside className="w-80 shrink-0">
             <ChatRoom
               messages={roomSync.chatMessages}
               onSendMessage={roomSync.sendChatMessage}

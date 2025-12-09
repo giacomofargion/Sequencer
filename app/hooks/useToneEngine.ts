@@ -22,6 +22,10 @@ export type ToneEngineApi = {
   updateInstrumentParams: (params: InstrumentParamMap) => void;
   updateSynthPattern: (synthPattern: SynthPattern) => void;
   updateSynthParams: (params: SynthParams) => void;
+  // Recording functionality
+  isRecording: boolean;
+  startRecording: () => Promise<void>;
+  stopRecording: () => Promise<Blob | null>;
 };
 
 export function useToneEngine(
@@ -61,6 +65,9 @@ export function useToneEngine(
   const synthSequencerRef = useRef<ToneType.FMSynth | null>(null);
   const loopIdRef = useRef<string | number | null>(null);
   const currentStepRef = useRef<number>(initialTransport.startStep);
+  const masterGainRef = useRef<ToneType.Gain | null>(null);
+  const recorderRef = useRef<ToneType.Recorder | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
 
   // Lazy-load Tone.js on the client and create synths + clock.
   useEffect(() => {
@@ -73,20 +80,39 @@ export function useToneEngine(
 
       toneRef.current = tone;
 
+      // Create master gain node - all audio routes through this for recording
+      const masterGain = new tone.Gain(1);
+      masterGainRef.current = masterGain;
+
+      // Connect master gain to destination for monitoring (always active)
+      masterGain.toDestination();
+
+      // Create recorder - it's a destination node that records audio
+      // Note: MediaRecorder API (used by Tone.js Recorder) only supports WebM/Opus format
+      // WAV is not supported by MediaRecorder, so we'll use WebM and convert if needed
+      const recorder = new tone.Recorder();
+      recorderRef.current = recorder;
+
+      // Connect master gain to recorder (for recording)
+      // This creates a parallel connection: masterGain -> destination (monitoring)
+      //                                    masterGain -> recorder (recording)
+      // The recorder will only capture audio when start() is called
+      masterGain.connect(recorder);
+
       const synths: Partial<Record<InstrumentId, ToneType.ToneAudioNode>> = {
-        kick: new tone.MembraneSynth().toDestination(),
+        kick: new tone.MembraneSynth().connect(masterGain),
         snare: new tone.NoiseSynth({
           envelope: { attack: 0.001, decay: 0.2, sustain: 0 },
-        }).toDestination(),
+        }).connect(masterGain),
         hihat: new tone.MetalSynth({
           envelope: { attack: 0.001, decay: 0.1, release: 0.01 },
-        }).toDestination(),
+        }).connect(masterGain),
         tom: new tone.MembraneSynth({
           pitchDecay: 0.08,
-        }).toDestination(),
+        }).connect(masterGain),
         clap: new tone.NoiseSynth({
           envelope: { attack: 0.001, decay: 0.15, sustain: 0 },
-        }).toDestination(),
+        }).connect(masterGain),
       };
 
       // Separate FMSynth for synth sequencer (different from drum "synth" instrument)
@@ -95,7 +121,7 @@ export function useToneEngine(
         modulationEnvelope: { attack: 0.01, decay: 0.3, sustain: 0.5, release: 0.2 },
         harmonicity: 3,
         modulationIndex: 10,
-      }).toDestination();
+      }).connect(masterGain);
 
       synthsRef.current = synths;
       synthSequencerRef.current = synthSequencer;
@@ -310,6 +336,143 @@ export function useToneEngine(
     // Pitch offset is also applied per-note in the transport loop
   };
 
+  // Start recording
+  const startRecording = async () => {
+    // Check if Tone.js is ready
+    if (!ready) {
+      console.error("Cannot start recording: Tone.js is not ready yet");
+      throw new Error("Audio engine is not ready. Please wait a moment and try again.");
+    }
+
+    const tone = toneRef.current;
+    const recorder = recorderRef.current;
+    const masterGain = masterGainRef.current;
+
+    if (!tone || !recorder || !masterGain) {
+      console.error("Cannot start recording: missing components", {
+        tone: !!tone,
+        recorder: !!recorder,
+        masterGain: !!masterGain,
+      });
+      throw new Error("Recording components not initialized. Please refresh the page.");
+    }
+
+    try {
+      // Ensure audio context is started and running
+      await ensureStarted();
+
+      // Start the recorder - this begins capturing audio from masterGain
+      // The recorder must be connected to masterGain before calling start()
+      await recorder.start();
+      setIsRecording(true);
+      console.log("Recording started - make sure to play audio for it to be captured");
+    } catch (error) {
+      console.error("Error starting recording:", error);
+      throw error;
+    }
+  };
+
+  // Helper function to convert AudioBuffer to WAV format
+  const audioBufferToWav = (buffer: AudioBuffer): ArrayBuffer => {
+    const length = buffer.length;
+    const numberOfChannels = buffer.numberOfChannels;
+    const sampleRate = buffer.sampleRate;
+    const bytesPerSample = 2;
+    const blockAlign = numberOfChannels * bytesPerSample;
+    const byteRate = sampleRate * blockAlign;
+    const dataSize = length * blockAlign;
+    const bufferSize = 44 + dataSize;
+
+    const arrayBuffer = new ArrayBuffer(bufferSize);
+    const view = new DataView(arrayBuffer);
+
+    // WAV header
+    const writeString = (offset: number, string: string) => {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    };
+
+    writeString(0, "RIFF");
+    view.setUint32(4, bufferSize - 8, true);
+    writeString(8, "WAVE");
+    writeString(12, "fmt ");
+    view.setUint32(16, 16, true); // fmt chunk size
+    view.setUint16(20, 1, true); // audio format (1 = PCM)
+    view.setUint16(22, numberOfChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, byteRate, true);
+    view.setUint16(32, blockAlign, true);
+    view.setUint16(34, 16, true); // bits per sample
+    writeString(36, "data");
+    view.setUint32(40, dataSize, true);
+
+    // Convert float samples to 16-bit PCM
+    let offset = 44;
+    for (let i = 0; i < length; i++) {
+      for (let channel = 0; channel < numberOfChannels; channel++) {
+        const sample = Math.max(-1, Math.min(1, buffer.getChannelData(channel)[i]));
+        view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+        offset += 2;
+      }
+    }
+
+    return arrayBuffer;
+  };
+
+  // Helper function to convert WebM blob to WAV
+  const convertWebMToWAV = async (webmBlob: Blob): Promise<Blob> => {
+    const arrayBuffer = await webmBlob.arrayBuffer();
+    const audioContext = new AudioContext();
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+    // Convert AudioBuffer to WAV
+    const wav = audioBufferToWav(audioBuffer);
+    return new Blob([wav], { type: "audio/wav" });
+  };
+
+  // Stop recording and return audio blob
+  const stopRecording = async (): Promise<Blob | null> => {
+    const recorder = recorderRef.current;
+    if (!recorder || !isRecording) {
+      console.warn("Cannot stop recording: not currently recording");
+      return null;
+    }
+
+    try {
+      // Stop the recorder and get the blob
+      const recording = await recorder.stop();
+      setIsRecording(false);
+
+      // Verify we got a valid blob
+      if (!recording) {
+        console.error("Recording is null");
+        return null;
+      }
+
+      if (recording.size === 0) {
+        console.error("Recording is empty (0 bytes)");
+        return null;
+      }
+
+      console.log(`Recording stopped: ${recording.size} bytes, type: ${recording.type}`);
+
+      // Convert WebM to WAV
+      if (recording.type.includes("webm")) {
+        console.log("Converting WebM to WAV...");
+        const wavBlob = await convertWebMToWAV(recording);
+        console.log(`Converted to WAV: ${wavBlob.size} bytes`);
+        return wavBlob;
+      }
+
+      return recording;
+    } catch (error) {
+      console.error("Error stopping recording:", error);
+      setIsRecording(false);
+      return null;
+    }
+  };
+
   return {
     ready,
     transport,
@@ -320,6 +483,9 @@ export function useToneEngine(
     updateInstrumentParams,
     updateSynthPattern,
     updateSynthParams,
+    isRecording,
+    startRecording,
+    stopRecording,
   };
 }
 
