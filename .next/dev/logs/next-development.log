@@ -1,13 +1,1 @@
-[00:00:00.428] Server  LOG      ✓ Ready in 279ms
-[00:00:02.339] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
-[00:00:05.618] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
-[00:00:16.440] Server  WARN     ⚠ Cross origin request detected from 192.168.0.14 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
-Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
-[00:00:16.989] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
-[00:00:49.534] Browser WARN    Events scheduled inside of scheduled callbacks should use the passed in scheduling time. See https://github.com/Tonejs/Tone.js/wiki/Accurate-Timing
-[00:00:50.425] Browser WARN    Events scheduled inside of scheduled callbacks should use the passed in scheduling time. See https://github.com/Tonejs/Tone.js/wiki/Accurate-Timing
-[00:00:57.214] Browser LOG     Recording started - make sure to play audio for it to be captured
-[00:01:16.055] Browser LOG     Recording stopped: 281498 bytes, type: audio/webm;codecs=opus
-[00:01:16.055] Browser LOG     Converting WebM to WAV...
-[00:01:16.055] Browser LOG     Converted to WAV: 3409964 bytes
-[00:01:47.507] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
+[00:00:00.884] Server  LOG      ✓ Ready in 663ms
