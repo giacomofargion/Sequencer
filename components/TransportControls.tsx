@@ -81,12 +81,12 @@ export const TransportControls: FC<Props> = ({
   };
 
   return (
-    <section className="flex items-center justify-between border-b border-neutral-200 pb-3 text-xs">
+    <section className="flex items-center justify-between border-b border-slate-700/50 pb-4 text-xs">
       <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={onTogglePlay}
-          className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-400 bg-white text-[11px] uppercase tracking-[0.18em] text-neutral-700 shadow-sm transition hover:bg-neutral-100"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-600/50 bg-slate-700/50 backdrop-blur-sm text-sm font-bold text-emerald-400 shadow-lg transition-all hover:bg-slate-700/70 hover:border-emerald-500/50 hover:shadow-emerald-500/20 active:scale-95"
         >
           {isPlaying ? "❚❚" : "▶"}
         </button>
@@ -94,11 +94,11 @@ export const TransportControls: FC<Props> = ({
           type="button"
           onClick={handleRecordToggle}
           disabled={isProcessing || !isReady}
-          className={`flex h-8 w-8 items-center justify-center rounded-full border text-[11px] uppercase tracking-[0.18em] shadow-sm transition ${
+          className={`flex h-10 w-10 items-center justify-center rounded-full border text-sm font-bold shadow-lg transition-all ${
             isRecording
-              ? "border-red-500 bg-red-50 text-red-700 animate-pulse"
-              : "border-neutral-400 bg-white text-neutral-700 hover:bg-neutral-100"
-          } ${isProcessing || !isReady ? "opacity-50 cursor-not-allowed" : ""}`}
+              ? "border-red-500/70 bg-red-900/40 text-red-400 animate-pulse shadow-red-500/30"
+              : "border-slate-600/50 bg-slate-700/50 text-slate-400 hover:bg-slate-700/70 hover:border-slate-500 hover:text-slate-300"
+          } ${isProcessing || !isReady ? "opacity-50 cursor-not-allowed" : "active:scale-95"}`}
           title={
             !isReady
               ? "Audio engine is loading..."
@@ -109,8 +109,8 @@ export const TransportControls: FC<Props> = ({
         >
           {isRecording ? "●" : "○"}
         </button>
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500">
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-xs uppercase tracking-[0.2em] text-slate-400">
             Tempo
           </span>
           <input
@@ -119,17 +119,17 @@ export const TransportControls: FC<Props> = ({
             max={180}
             value={tempo}
             onChange={(e) => onTempoChange(Number(e.target.value))}
-            className="h-1 w-40 accent-emerald-600"
+            className="h-1.5 w-40 accent-emerald-500"
           />
-          <span className="w-10 text-right font-mono text-[11px] text-neutral-700">
+          <span className="w-12 text-right font-mono text-sm font-semibold text-emerald-400">
             {tempo}
           </span>
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        <label className="flex items-center gap-1">
-          <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-neutral-500">
+      <div className="flex items-center gap-6">
+        <label className="flex flex-col gap-1.5">
+          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-slate-400 font-semibold">
             Start
           </span>
           <input
@@ -138,11 +138,11 @@ export const TransportControls: FC<Props> = ({
             max={maxSteps}
             value={startStep + 1}
             onChange={(e) => handleStartChange(Number(e.target.value) - 1)}
-            className="w-14 rounded border border-neutral-300 bg-white px-1 py-0.5 text-right font-mono text-[11px]"
+            className="w-20 rounded-lg border border-slate-600/50 bg-slate-800/50 backdrop-blur-sm px-3 py-2 text-center font-mono text-sm font-semibold text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all hover:border-slate-500/50"
           />
         </label>
-        <label className="flex items-center gap-1">
-          <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-neutral-500">
+        <label className="flex flex-col gap-1.5">
+          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-slate-400 font-semibold">
             End
           </span>
           <input
@@ -151,7 +151,7 @@ export const TransportControls: FC<Props> = ({
             max={maxSteps}
             value={endStep + 1}
             onChange={(e) => handleEndChange(Number(e.target.value) - 1)}
-            className="w-14 rounded border border-neutral-300 bg-white px-1 py-0.5 text-right font-mono text-[11px]"
+            className="w-20 rounded-lg border border-slate-600/50 bg-slate-800/50 backdrop-blur-sm px-3 py-2 text-center font-mono text-sm font-semibold text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all hover:border-slate-500/50"
           />
         </label>
       </div>

@@ -62,26 +62,26 @@ export const RoomControls: FC<Props> = ({
   };
 
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 text-xs text-neutral-500">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 text-xs text-slate-400">
       <div className="flex items-center gap-2 flex-wrap">
         <span className="whitespace-nowrap">Room Code:</span>
         {roomId ? (
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-mono text-[11px] tracking-widest text-neutral-700">
+            <span className="font-mono text-xs tracking-widest text-emerald-400 font-semibold">
               {roomId}
             </span>
-            <span className="text-[10px] text-neutral-400">
+            <span className="text-[10px] text-slate-500">
               ({participantCount} {participantCount === 1 ? "user" : "users"})
             </span>
             <div
-              className={`h-2 w-2 rounded-full ${
-                isConnected ? "bg-emerald-500" : "bg-yellow-500"
+              className={`h-2.5 w-2.5 rounded-full shadow-lg ${
+                isConnected ? "bg-emerald-500 shadow-emerald-500/50" : "bg-yellow-500 shadow-yellow-500/50 animate-pulse"
               }`}
               title={isConnected ? "Connected" : "Connecting..."}
             />
           </div>
         ) : (
-          <span className="font-mono text-[11px] tracking-widest text-neutral-400">solo</span>
+          <span className="font-mono text-xs tracking-widest text-slate-500">solo</span>
         )}
       </div>
 
@@ -89,15 +89,15 @@ export const RoomControls: FC<Props> = ({
       <div className="flex items-center gap-2 flex-wrap">
         {userName ? (
           <div className="flex items-center gap-1">
-            <span className="text-[10px] text-neutral-600">Name:</span>
-            <span className="text-[11px] font-medium text-neutral-700">{userName}</span>
+            <span className="text-[10px] text-slate-500">Name:</span>
+            <span className="text-xs font-medium text-slate-200">{userName}</span>
             <button
               type="button"
               onClick={() => {
                 setShowNameInput(true);
                 setNameInput(userName);
               }}
-              className="text-[9px] text-neutral-400 hover:text-neutral-600"
+              className="text-[9px] text-slate-500 hover:text-slate-300 transition-colors"
               title="Change name"
             >
               ✎
@@ -107,7 +107,7 @@ export const RoomControls: FC<Props> = ({
           <button
             type="button"
             onClick={() => setShowNameInput(true)}
-            className="text-[10px] text-neutral-500 hover:text-neutral-700 underline"
+            className="text-[10px] text-slate-400 hover:text-slate-200 underline transition-colors"
           >
             Set Name
           </button>
@@ -127,13 +127,13 @@ export const RoomControls: FC<Props> = ({
               }}
               placeholder="Your name"
               maxLength={20}
-              className="w-24 rounded border border-neutral-300 bg-white px-2 py-1 text-[11px] focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="w-24 rounded-lg border border-slate-600/50 bg-slate-800/50 backdrop-blur-sm px-2 py-1 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
               autoFocus
             />
             <button
               type="button"
               onClick={handleSetName}
-              className="rounded border border-neutral-300 bg-white px-2 py-1 text-[10px] uppercase tracking-[0.1em] transition hover:bg-neutral-50"
+              className="rounded-lg border border-slate-600/50 bg-slate-700/50 backdrop-blur-sm px-2 py-1 text-[10px] uppercase tracking-[0.1em] transition-all hover:bg-slate-700/70 hover:border-slate-500 active:scale-95"
             >
               Save
             </button>
@@ -143,7 +143,7 @@ export const RoomControls: FC<Props> = ({
                 setShowNameInput(false);
                 setNameInput("");
               }}
-              className="text-[10px] text-neutral-400 hover:text-neutral-600"
+              className="text-[10px] text-slate-500 hover:text-slate-300 transition-colors"
             >
               ✕
             </button>
@@ -157,14 +157,14 @@ export const RoomControls: FC<Props> = ({
             <button
               type="button"
               onClick={handleCreateRoom}
-              className="rounded border border-neutral-300 bg-white px-2 py-1 text-[10px] uppercase tracking-[0.1em] transition hover:bg-neutral-50"
+              className="rounded-lg border border-slate-600/50 bg-slate-700/50 backdrop-blur-sm px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] transition-all hover:bg-slate-700/70 hover:border-slate-500 active:scale-95"
             >
               Create Room
             </button>
             <button
               type="button"
               onClick={() => setShowInput(!showInput)}
-              className="rounded border border-neutral-300 bg-white px-2 py-1 text-[10px] uppercase tracking-[0.1em] transition hover:bg-neutral-50"
+              className="rounded-lg border border-slate-600/50 bg-slate-700/50 backdrop-blur-sm px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] transition-all hover:bg-slate-700/70 hover:border-slate-500 active:scale-95"
             >
               Join Room
             </button>
@@ -173,7 +173,7 @@ export const RoomControls: FC<Props> = ({
           <button
             type="button"
             onClick={handleLeaveRoom}
-            className="rounded border border-neutral-300 bg-white px-2 py-1 text-[10px] uppercase tracking-[0.1em] transition hover:bg-neutral-50"
+            className="rounded-lg border border-slate-600/50 bg-slate-700/50 backdrop-blur-sm px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] transition-all hover:bg-slate-700/70 hover:border-slate-500 active:scale-95"
           >
             Leave
           </button>
@@ -194,13 +194,13 @@ export const RoomControls: FC<Props> = ({
               }}
               placeholder="abc123"
               maxLength={6}
-              className="w-16 rounded border border-neutral-300 bg-white px-2 py-1 text-[11px] font-mono uppercase tracking-widest placeholder:text-neutral-300 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="w-16 rounded-lg border border-slate-600/50 bg-slate-800/50 backdrop-blur-sm px-2 py-1 text-xs font-mono uppercase tracking-widest placeholder:text-slate-500 text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
               autoFocus
             />
             <button
               type="button"
               onClick={handleJoinRoom}
-              className="rounded border border-neutral-300 bg-white px-2 py-1 text-[10px] uppercase tracking-[0.1em] transition hover:bg-neutral-50"
+              className="rounded-lg border border-slate-600/50 bg-slate-700/50 backdrop-blur-sm px-2 py-1 text-[10px] uppercase tracking-[0.1em] transition-all hover:bg-slate-700/70 hover:border-slate-500 active:scale-95"
             >
               Go
             </button>

@@ -183,6 +183,26 @@ export default function SequencerPage() {
     }
   };
 
+  const handleClearDrums = () => {
+    const emptyPattern = createEmptyPattern();
+    if (roomId) {
+      roomSync.clearPattern();
+    } else {
+      setLocalPattern(emptyPattern);
+      engine.updatePattern(emptyPattern);
+    }
+  };
+
+  const handleClearSynth = () => {
+    const emptySynthPattern = createEmptySynthPattern();
+    if (roomId) {
+      roomSync.clearSynthPattern();
+    } else {
+      setLocalSynthPattern(emptySynthPattern);
+      engine.updateSynthPattern(emptySynthPattern);
+    }
+  };
+
   const handleTransportChange = {
     tempo: (tempo: number) => {
       if (roomId) {
@@ -209,13 +229,13 @@ export default function SequencerPage() {
   };;
 
   return (
-    <main className="flex flex-1 flex-col gap-4">
-      <header className="flex flex-col sm:flex-row items-start sm:items-baseline justify-between gap-3 sm:gap-4 border-b border-neutral-300 pb-4">
+    <main className="flex flex-1 flex-col gap-6">
+      <header className="flex flex-col sm:flex-row items-start sm:items-baseline justify-between gap-3 sm:gap-4 border-b border-slate-700/50 pb-4 backdrop-blur-sm">
         <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-neutral-500">
+          <p className="text-xs uppercase tracking-[0.25em] text-emerald-400/70 font-semibold mb-1">
             Fargion
           </p>
-          <h1 className="text-sm font-medium tracking-[0.18em] text-neutral-800">
+          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-emerald-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent">
             Sequencer
           </h1>
         </div>
@@ -234,9 +254,9 @@ export default function SequencerPage() {
       </header>
 
       <div className="flex flex-1 gap-4">
-        <section className="flex flex-1 flex-col rounded-md border border-neutral-300 bg-white p-4 shadow-sm">
+        <section className="relative flex flex-1 flex-col rounded-xl border border-slate-700/50 bg-slate-800/40 backdrop-blur-xl p-6 shadow-2xl">
           {roomSync.error && (
-            <div className="mb-4 rounded border border-red-200 bg-red-50 p-2 text-xs text-red-700">
+            <div className="mb-4 rounded-lg border border-red-500/50 bg-red-900/20 backdrop-blur-sm p-3 text-xs text-red-300">
               {roomSync.error}
             </div>
           )}
@@ -257,14 +277,14 @@ export default function SequencerPage() {
           />
 
           {/* Instrument view selector */}
-          <div className="mt-3 flex gap-2 border-b border-neutral-200 pb-2">
+          <div className="mt-4 flex gap-2 border-b border-slate-700/50 pb-2">
             <button
               type="button"
               onClick={() => setInstrumentView("drums")}
-              className={`px-3 py-1 text-xs font-medium transition-colors ${
+              className={`px-4 py-2 text-sm font-medium transition-all rounded-t-lg ${
                 instrumentView === "drums"
-                  ? "bg-neutral-800 text-white"
-                  : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+                  ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30"
+                  : "bg-slate-700/30 text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
               }`}
             >
               Drums
@@ -272,10 +292,10 @@ export default function SequencerPage() {
             <button
               type="button"
               onClick={() => setInstrumentView("synth")}
-              className={`px-3 py-1 text-xs font-medium transition-colors ${
+              className={`px-4 py-2 text-sm font-medium transition-all rounded-t-lg ${
                 instrumentView === "synth"
-                  ? "bg-neutral-800 text-white"
-                  : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+                  ? "bg-gradient-to-r from-cyan-500 to-cyan-600 text-white shadow-lg shadow-cyan-500/30"
+                  : "bg-slate-700/30 text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
               }`}
             >
               Synth
@@ -290,6 +310,7 @@ export default function SequencerPage() {
               instrumentParams={instrumentParams}
               onToggleStep={handleToggleStep}
               onInstrumentParamChange={handleInstrumentParamsChange}
+              onClear={handleClearDrums}
             />
           )}
 
@@ -300,18 +321,19 @@ export default function SequencerPage() {
               synthParams={synthParams}
               onToggleStep={handleSynthStepToggle}
               onParamChange={handleSynthParamChange}
+              onClear={handleClearSynth}
             />
           )}
 
           {!engine.ready && (
-            <p className="mt-4 text-xs text-neutral-400">
+            <p className="mt-4 text-xs text-slate-400">
               Audio engine is loading in the background. You can already draw a
               pattern; sound will start once it is ready.
             </p>
           )}
 
           {roomId && roomSync.isLoading && (
-            <p className="mt-4 text-xs text-neutral-400">Connecting to room...</p>
+            <p className="mt-4 text-xs text-slate-400">Connecting to room...</p>
           )}
         </section>
 

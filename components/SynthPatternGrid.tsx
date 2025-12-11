@@ -11,6 +11,7 @@ type Props = {
   synthParams: SynthParams;
   onToggleStep: (row: number, col: number, note: number) => void;
   onParamChange: (field: keyof SynthParams, value: number) => void;
+  onClear?: () => void;
 };
 
 // MIDI note to note name mapping
@@ -35,6 +36,7 @@ export const SynthPatternGrid: FC<Props> = ({
   synthParams,
   onToggleStep,
   onParamChange,
+  onClear,
 }) => {
   const [octave, setOctave] = useState(3); // Default to octave 3 (C3-C4 range)
   const steps = pattern[0] ?? [];
@@ -55,12 +57,21 @@ export const SynthPatternGrid: FC<Props> = ({
   return (
     <section className="mt-3 flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500">
+        <div className="font-mono text-xs uppercase tracking-[0.2em] text-cyan-400/80 font-semibold">
           FM Synthesizer Sequencer
         </div>
+        {onClear && (
+          <button
+            type="button"
+            onClick={onClear}
+            className="px-4 py-2 text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg transition-all border border-slate-600/50 hover:border-slate-500 active:scale-95 backdrop-blur-sm"
+          >
+            Clear All
+          </button>
+        )}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <label className="text-xs text-neutral-600">Octave:</label>
+            <label className="text-xs text-slate-300">Octave:</label>
             <Knob
               label=""
               min={0}
@@ -69,14 +80,14 @@ export const SynthPatternGrid: FC<Props> = ({
               value={octave}
               onChange={setOctave}
             />
-            <span className="text-xs font-mono text-neutral-600 w-8">{octave}</span>
+            <span className="text-xs font-mono text-slate-200 font-semibold w-8">{octave}</span>
           </div>
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <div className="min-w-[720px] rounded border border-blue-200 bg-white">
-          <div className="flex border-b border-blue-200 bg-blue-50 text-[9px] font-mono uppercase tracking-[0.18em] text-blue-700">
+      <div className="overflow-x-hidden">
+        <div className="w-full rounded-lg border border-slate-700/50 bg-slate-900/40 backdrop-blur-sm shadow-xl">
+          <div className="flex border-b border-slate-700/50 bg-slate-800/50 text-[9px] font-mono uppercase tracking-[0.18em] text-slate-400">
             <div className="flex w-24 items-center justify-end px-2">Note</div>
             <div className="flex flex-1">
               {steps.map((_, col) => {
@@ -84,14 +95,17 @@ export const SynthPatternGrid: FC<Props> = ({
                 return (
                   <div
                     key={col}
-                    className={`flex h-7 flex-1 items-center justify-center border-l border-blue-200 ${
-                      isCurrent ? "bg-blue-100" : ""
+                    className={`flex h-7 flex-1 items-center justify-center border-l border-slate-700/50 ${
+                      isCurrent ? "bg-cyan-500/20 text-cyan-400" : "text-slate-500"
                     }`}
                   >
                     {col + 1}
                   </div>
                 );
               })}
+            </div>
+            <div className="flex w-24 items-center justify-center border-l border-slate-700/50 px-2 text-[9px] text-slate-400">
+              Note
             </div>
           </div>
 
@@ -117,15 +131,15 @@ export const SynthPatternGrid: FC<Props> = ({
       </div>
 
       {/* All Parameters in One Section */}
-      <div className="mt-4 rounded-lg border border-blue-200 bg-gradient-to-br from-blue-50/50 to-blue-100/30 p-4 shadow-sm">
-        <div className="mb-3 font-mono text-xs uppercase tracking-[0.2em] text-blue-700">
+      <div className="mt-4 rounded-lg border border-slate-700/50 bg-gradient-to-br from-slate-800/60 to-slate-900/40 backdrop-blur-sm p-4 shadow-xl">
+        <div className="mb-3 font-mono text-xs uppercase tracking-[0.2em] text-cyan-400/80 font-semibold">
           FM Synthesis Parameters
         </div>
 
         <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 justify-items-center">
           {/* Pitch Section */}
           <div className="space-y-2">
-            <div className="text-xs font-semibold text-neutral-700 mb-2 uppercase tracking-wide">
+            <div className="text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wide">
               Pitch
             </div>
             <Knob
@@ -148,7 +162,7 @@ export const SynthPatternGrid: FC<Props> = ({
 
           {/* Envelope Section */}
           <div className="space-y-2">
-            <div className="text-xs font-semibold text-neutral-700 mb-2 uppercase tracking-wide">
+            <div className="text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wide">
               Envelope
             </div>
             <Knob
@@ -187,7 +201,7 @@ export const SynthPatternGrid: FC<Props> = ({
 
           {/* FM Modulation Section */}
           <div className="space-y-2">
-            <div className="text-xs font-semibold text-neutral-700 mb-2 uppercase tracking-wide">
+            <div className="text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wide">
               FM Modulation
             </div>
             <Knob
@@ -210,7 +224,7 @@ export const SynthPatternGrid: FC<Props> = ({
 
           {/* Mod Envelope Section */}
           <div className="space-y-2">
-            <div className="text-xs font-semibold text-neutral-700 mb-2 uppercase tracking-wide">
+            <div className="text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wide">
               Mod Envelope
             </div>
             <Knob
@@ -275,9 +289,9 @@ const SynthRow: FC<SynthRowProps> = ({
   const isBlackKey = [1, 3, 6, 8, 10].includes(rowIndex);
 
   return (
-    <div className={`flex border-t border-blue-200 ${isBlackKey ? "bg-blue-50/30" : ""}`}>
+    <div className={`flex border-t border-slate-700/50 ${isBlackKey ? "bg-slate-800/30" : ""}`}>
       <div className={`flex w-24 items-center justify-end px-2 text-[11px] font-medium ${
-        isBlackKey ? "bg-blue-100/50 text-blue-600" : "bg-blue-100/30 text-blue-700"
+        isBlackKey ? "bg-slate-800/60 text-cyan-300" : "bg-slate-800/40 text-cyan-400"
       }`}>
         {noteLabel}
       </div>
@@ -296,22 +310,27 @@ const SynthRow: FC<SynthRowProps> = ({
               key={col}
               type="button"
               onClick={() => onStepClick(rowIndex, col)}
-              className={`h-8 flex-1 border-l border-blue-200 transition ${
+              className={`h-8 flex-1 border-l border-slate-700/50 transition-all ${
                 isActive && noteMatches
                   ? isBlackKey
-                    ? "bg-blue-600 text-white"
-                    : "bg-blue-500 text-white"
-                  : "bg-white hover:bg-blue-50"
-              } ${isCurrent ? "ring-1 ring-blue-500" : ""}`}
+                    ? "bg-cyan-600/60 text-cyan-100 hover:bg-cyan-600/70"
+                    : "bg-cyan-500/50 text-cyan-100 hover:bg-cyan-500/60"
+                  : "bg-slate-900/30 hover:bg-slate-800/50"
+              } ${isCurrent ? "ring-2 ring-cyan-400/50 shadow-lg shadow-cyan-500/20" : ""}`}
             >
               {isActive && noteMatches ? (
                 <span className="text-xs">●</span>
               ) : (
-                <span className="text-[10px] text-neutral-300">·</span>
+                <span className="text-[10px] text-slate-500">·</span>
               )}
             </button>
           );
         })}
+      </div>
+      <div className={`flex w-24 items-center justify-center border-l border-slate-700/50 px-2 bg-slate-800/30 ${
+        isBlackKey ? "bg-slate-800/40" : ""
+      }`}>
+        <span className="text-[10px] text-slate-500 font-mono">{noteLabel}</span>
       </div>
     </div>
   );
