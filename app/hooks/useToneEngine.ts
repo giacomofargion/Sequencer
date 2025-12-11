@@ -2,7 +2,6 @@
 // Keeps Tone-specific details here so UI stays simple and type-safe.
 
 import { useEffect, useRef, useState } from "react";
-import type * as ToneType from "tone";
 import type {
   InstrumentId,
   InstrumentParamMap,
@@ -38,7 +37,7 @@ export function useToneEngine(
   const [transport, setTransport] = useState<TransportState>(initialTransport);
   const [ready, setReady] = useState(false);
 
-  const toneRef = useRef<ToneType | null>(null);
+  const toneRef = useRef<typeof import("tone") | null>(null);
   const patternRef = useRef<Pattern>(initialPattern);
   const paramsRef = useRef<InstrumentParamMap>(initialParams);
   const synthPatternRef = useRef<SynthPattern>(
