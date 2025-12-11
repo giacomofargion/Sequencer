@@ -131,21 +131,30 @@ export function useRoomSync(roomId: RoomId | null): UseRoomSyncReturn {
         const presence = channel.presenceState();
         const participants: Participant[] = Object.values(presence)
           .flat()
-          .map((p) => p as Participant);
+          .map((p) => {
+            // Extract participant data, excluding Supabase metadata
+            const { presence_ref, ...participantData } = p as any;
+            return participantData as Participant;
+          })
+          .filter((p): p is Participant => p.id !== undefined);
         setRoomState((prev) =>
           prev ? { ...prev, participants } : null,
         );
       })
       .on("presence", { event: "join" }, ({ key, newPresences }) => {
         // New participant joined
-        const newParticipant = newPresences[0] as Participant;
-        if (newParticipant && newParticipant.id !== userIdRef.current) {
-          // Send full sync to new participant
-          if (roomState) {
-            broadcastMessage({
-              type: "full_sync",
-              state: roomState,
-            });
+        const presenceEntry = newPresences[0];
+        if (presenceEntry) {
+          const { presence_ref, ...participantData } = presenceEntry as any;
+          const newParticipant = participantData as Participant;
+          if (newParticipant && newParticipant.id !== userIdRef.current) {
+            // Send full sync to new participant
+            if (roomState) {
+              broadcastMessage({
+                type: "full_sync",
+                state: roomState,
+              });
+            }
           }
         }
       })
