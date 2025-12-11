@@ -41,12 +41,14 @@ type UseRoomSyncReturn = {
     value: number,
   ) => void;
   toggleStep: (row: number, col: number) => void;
+  clearPattern: () => void;
   // Chat functionality
   chatMessages: ChatMessage[];
   sendChatMessage: (text: string) => void;
   // Synth sequencer functionality
   toggleSynthStep: (row: number, col: number, note: number) => void;
   updateSynthParam: (field: keyof RoomState["synthParams"], value: number) => void;
+  clearSynthPattern: () => void;
   // Update presence with new name
   updatePresence: () => void;
 };
@@ -483,6 +485,41 @@ export function useRoomSync(roomId: RoomId | null): UseRoomSyncReturn {
     [roomId, broadcastMessage],
   );
 
+  // Clear all steps in drum pattern
+  const clearPattern = useCallback(() => {
+    const emptyPattern = createEmptyPattern();
+    let currentPattern: Pattern = emptyPattern;
+
+    setRoomState((prev) => {
+      if (!prev) return prev;
+      currentPattern = prev.drumPattern;
+      return {
+        ...prev,
+        pattern: emptyPattern, // Keep for backward compatibility
+        drumPattern: emptyPattern,
+        lastActivity: Date.now(),
+      };
+    });
+
+    if (roomId) {
+      isLocalChangeRef.current = true;
+      // Broadcast clear by toggling all active steps off
+      currentPattern.forEach((row, rowIndex) => {
+        row.forEach((step, colIndex) => {
+          if (step.active) {
+            broadcastMessage({
+              type: "step_toggle",
+              row: rowIndex,
+              col: colIndex,
+              userId: userIdRef.current,
+              timestamp: Date.now(),
+            });
+          }
+        });
+      });
+    }
+  }, [roomId, broadcastMessage]);
+
   // Update transport (optimistic + broadcast)
   const updateTransport = useCallback(
     (transport: Partial<TransportState>) => {
@@ -639,6 +676,41 @@ export function useRoomSync(roomId: RoomId | null): UseRoomSyncReturn {
     [roomId, broadcastMessage],
   );
 
+  // Clear all steps in synth pattern
+  const clearSynthPattern = useCallback(() => {
+    const emptySynthPattern = createEmptySynthPattern();
+    let currentPattern: SynthPattern = emptySynthPattern;
+
+    setRoomState((prev) => {
+      if (!prev) return prev;
+      currentPattern = prev.synthPattern;
+      return {
+        ...prev,
+        synthPattern: emptySynthPattern,
+        lastActivity: Date.now(),
+      };
+    });
+
+    if (roomId) {
+      isLocalChangeRef.current = true;
+      // Broadcast clear by toggling all active steps off
+      currentPattern.forEach((row, rowIndex) => {
+        row.forEach((step, colIndex) => {
+          if (step.active) {
+            broadcastMessage({
+              type: "synth_step_toggle",
+              row: rowIndex,
+              col: colIndex,
+              note: step.note,
+              userId: userIdRef.current,
+              timestamp: Date.now(),
+            });
+          }
+        });
+      });
+    }
+  }, [roomId, broadcastMessage]);
+
   // Update synth parameter
   const updateSynthParam = useCallback(
     (field: keyof RoomState["synthParams"], value: number) => {
@@ -692,10 +764,12 @@ export function useRoomSync(roomId: RoomId | null): UseRoomSyncReturn {
     updateTransport,
     updateInstrumentParam,
     toggleStep,
+    clearPattern,
     chatMessages: roomState?.chatMessages || [],
     sendChatMessage,
     toggleSynthStep,
     updateSynthParam,
+    clearSynthPattern,
     updatePresence,
   };
 }

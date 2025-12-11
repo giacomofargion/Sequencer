@@ -17,6 +17,7 @@ type Props = {
     field: "pitch" | "decay" | "timbre",
     value: number,
   ) => void;
+  onClear?: () => void;
 };
 
 export const PatternGrid: FC<Props> = ({
@@ -25,26 +26,38 @@ export const PatternGrid: FC<Props> = ({
   instrumentParams,
   onToggleStep,
   onInstrumentParamChange,
+  onClear,
 }) => {
   const steps = pattern[0] ?? [];
 
   return (
-    <section className="mt-3 flex flex-col gap-2">
-      <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500">
-        Pattern
+    <section className="mt-3 flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <div className="font-mono text-xs uppercase tracking-[0.2em] text-emerald-400/80 font-semibold">
+          Pattern
+        </div>
+        {onClear && (
+          <button
+            type="button"
+            onClick={onClear}
+            className="px-4 py-2 text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg transition-all border border-slate-600/50 hover:border-slate-500 active:scale-95 backdrop-blur-sm"
+          >
+            Clear All
+          </button>
+        )}
       </div>
-      <div className="overflow-x-auto">
-        <div className="min-w-[720px] rounded border border-neutral-300 bg-white">
-          <div className="flex border-b border-neutral-200 bg-neutral-50 text-[9px] font-mono uppercase tracking-[0.18em] text-neutral-500">
-            <div className="flex w-24 items-center justify-end px-2">Row</div>
+      <div className="overflow-x-hidden">
+        <div className="w-full rounded-lg border border-slate-700/50 bg-slate-900/40 backdrop-blur-sm shadow-xl">
+          <div className="flex border-b border-slate-700/50 bg-slate-800/50 text-[9px] font-mono uppercase tracking-[0.18em] text-slate-400">
+            <div className="flex w-16 items-center justify-end px-2">Row</div>
             <div className="flex flex-1">
               {steps.map((_, col) => {
                 const isCurrent = col === currentStep;
                 return (
                   <div
                     key={col}
-                    className={`flex h-7 flex-1 items-center justify-center border-l border-neutral-200 ${
-                      isCurrent ? "bg-emerald-50" : ""
+                    className={`flex h-7 flex-1 items-center justify-center border-l border-slate-700/50 ${
+                      isCurrent ? "bg-emerald-500/20 text-emerald-400" : "text-slate-500"
                     }`}
                   >
                     {col + 1}
@@ -52,7 +65,7 @@ export const PatternGrid: FC<Props> = ({
                 );
               })}
             </div>
-            <div className="flex w-40 items-center justify-center border-l border-neutral-200 px-2 text-[9px]">
+            <div className="flex w-48 items-center justify-center border-l border-slate-700/50 px-2 text-[9px] text-slate-400">
               Sound
             </div>
           </div>
@@ -99,8 +112,8 @@ const Row: FC<RowProps> = ({
   onParamChange,
 }) => {
   return (
-    <div className="flex border-t border-neutral-200">
-      <div className="flex w-24 items-center justify-end bg-neutral-100 px-2 text-[11px] capitalize text-neutral-600">
+    <div className="flex border-t border-slate-700/50">
+      <div className="flex w-16 items-center justify-end bg-slate-800/50 px-2 text-[11px] capitalize text-slate-300 font-medium">
         {instrument}
       </div>
       <div className="flex flex-1">
@@ -112,14 +125,14 @@ const Row: FC<RowProps> = ({
               key={col}
               type="button"
               onClick={() => onToggleStep(rowIndex, col)}
-              className={`h-9 flex-1 border-l border-neutral-200 transition ${
+              className={`h-9 flex-1 border-l border-slate-700/50 transition-all ${
                 isActive
-                  ? "bg-emerald-500/10 text-emerald-700"
-                  : "bg-white hover:bg-neutral-50"
-              } ${isCurrent ? "ring-1 ring-emerald-500/70" : ""}`}
+                  ? "bg-emerald-500/30 text-emerald-300 hover:bg-emerald-500/40"
+                  : "bg-slate-900/30 hover:bg-slate-800/50"
+              } ${isCurrent ? "ring-2 ring-emerald-400/50 shadow-lg shadow-emerald-500/20" : ""}`}
             >
               {isActive && (
-                <span className="block text-xs leading-none text-emerald-600">
+                <span className="block text-xs leading-none text-emerald-300 font-bold">
                   ×
                 </span>
               )}
@@ -127,7 +140,7 @@ const Row: FC<RowProps> = ({
           );
         })}
       </div>
-      <div className="flex w-40 items-center justify-center gap-2 border-l border-neutral-200 bg-neutral-50 px-2">
+      <div className="flex w-48 items-center justify-center gap-2 border-l border-slate-700/50 bg-slate-800/30 px-3 py-2">
         <Knob
           label="Pitch"
           min={-24}

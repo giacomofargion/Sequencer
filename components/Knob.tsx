@@ -110,7 +110,7 @@ export const Knob: FC<Props> = ({
           </span>
         </div>
       </div>
-      <span className="text-[8px] font-medium uppercase tracking-wider text-neutral-600 text-center max-w-[55px] leading-tight">
+      <span className="text-[8px] font-medium uppercase tracking-wider text-white text-center max-w-[55px] leading-tight">
         {label}
       </span>
     </div>

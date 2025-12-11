@@ -100,17 +100,17 @@ export function useToneEngine(
 
       const synths: Partial<Record<InstrumentId, any>> = {
         kick: new tone.MembraneSynth().connect(masterGain),
-        snare: new tone.NoiseSynth({
-          envelope: { attack: 0.001, decay: 0.2, sustain: 0 },
+        snare: new tone.MetalSynth({
+          envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.01 },
         }).connect(masterGain),
-        hihat: new tone.MetalSynth({
-          envelope: { attack: 0.001, decay: 0.1, release: 0.01 },
+        hihat: new tone.NoiseSynth({
+          envelope: { attack: 0.001, decay: 0.15, sustain: 0 },
         }).connect(masterGain),
         tom: new tone.MembraneSynth({
           pitchDecay: 0.08,
         }).connect(masterGain),
-        clap: new tone.NoiseSynth({
-          envelope: { attack: 0.001, decay: 0.15, sustain: 0 },
+        clap: new tone.MetalSynth({
+          envelope: { attack: 0.001, decay: 0.1, release: 0.01 },
         }).connect(masterGain),
       };
 
@@ -288,23 +288,29 @@ export function useToneEngine(
         // Also modulate octaves to add more character variation.
         drum.octaves = 1 + timbre * 3;
       } else if (id === "snare") {
+        const metal = synth as any;
+        metal.envelope.decay = decay;
+        // Wide timbre range for dramatic effect
+        // Harmonicity: 0.5 (darker) to 20 (very bright/metallic)
+        metal.set({ harmonicity: 0.5 + Math.pow(timbre, 1.5) * 19.5 });
+        // Resonance: 200 (loose) to 2000 (very tight/ringing)
+        metal.set({ resonance: 200 + Math.pow(timbre, 2) * 1800 });
+        // Modulation index: 5 (subtle) to 50 (very complex)
+        metal.set({ modulationIndex: 5 + timbre * 45 });
+        // Octaves: 1 (simple) to 4 (complex harmonics)
+        metal.octaves = 1 + timbre * 3;
+      } else if (id === "hihat") {
         const noise = synth as any;
         noise.envelope.decay = decay;
-        // Timbre modulates volume: low = thinner/quieter, high = punchier/louder.
-        // Range from -12dB (thin) to +12dB (punchy) makes timbre very noticeable.
-        noise.volume.value = (timbre - 0.5) * 24;
-      } else if (id === "hihat") {
+        // Timbre modulates volume for hihat: low = thinner, high = punchier
+        noise.volume.value = (timbre - 0.5) * 20;
+      } else if (id === "clap") {
         const metal = synth as any;
         metal.envelope.decay = decay;
         // Much wider harmonicity range (1 to 20) for dramatic timbral shifts.
         metal.set({ harmonicity: 1 + timbre * 19 });
         // Also modulate resonance for more character.
         metal.set({ resonance: 200 + timbre * 800 });
-      } else if (id === "clap") {
-        const noise = synth as any;
-        noise.envelope.decay = decay;
-        // Timbre modulates volume for clap: low = thinner, high = punchier
-        noise.volume.value = (timbre - 0.5) * 20;
       }
     });
   };
@@ -514,7 +520,11 @@ function triggerInstrument(
       time,
     );
   } else if (id === "snare") {
-    (synth as any).triggerAttackRelease(decay, time);
+    // Snare: MetalSynth - use higher frequency than clap for snare character
+    const metal = synth as any;
+    // Base frequency around 400Hz (higher than clap), modulated by pitch parameter
+    const snareFreq = tone.Frequency(400, "hz").transpose(pitch).toFrequency();
+    metal.triggerAttackRelease(snareFreq, decay, time);
   } else if (id === "hihat") {
     (synth as any).triggerAttackRelease(decay, time);
   } else if (id === "clap") {
