@@ -114,7 +114,12 @@ export function useRoomSync(roomId: RoomId | null): UseRoomSyncReturn {
         const message = payload.payload as SyncMessage;
 
         // Ignore our own messages (prevent feedback loops)
-        if (message.userId === userIdRef.current && isLocalChangeRef.current) {
+        // Only check userId for messages that have it
+        if (
+          "userId" in message &&
+          message.userId === userIdRef.current &&
+          isLocalChangeRef.current
+        ) {
           isLocalChangeRef.current = false;
           return;
         }
