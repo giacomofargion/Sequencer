@@ -204,7 +204,11 @@ export function useToneEngine(
       cancelled = true;
       const tone = toneRef.current;
       if (tone && loopIdRef.current != null) {
-        tone.Transport.clear(loopIdRef.current);
+        const loopId = loopIdRef.current;
+        // Transport.clear expects a number, but scheduleRepeat can return string | number
+        if (typeof loopId === "number") {
+          tone.Transport.clear(loopId);
+        }
       }
     };
     // We intentionally run this once; pattern/params are tracked via refs.
