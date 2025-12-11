@@ -60,12 +60,12 @@ export function useToneEngine(
     },
   );
   const synthsRef =
-    useRef<Partial<Record<InstrumentId, ToneType.ToneAudioNode>>>();
-  const synthSequencerRef = useRef<ToneType.FMSynth | null>(null);
+    useRef<Partial<Record<InstrumentId, any>>>({});
+  const synthSequencerRef = useRef<any | null>(null);
   const loopIdRef = useRef<string | number | null>(null);
   const currentStepRef = useRef<number>(initialTransport.startStep);
-  const masterGainRef = useRef<ToneType.Gain | null>(null);
-  const recorderRef = useRef<ToneType.Recorder | null>(null);
+  const masterGainRef = useRef<any | null>(null);
+  const recorderRef = useRef<any | null>(null);
   const [isRecording, setIsRecording] = useState(false);
 
   // Lazy-load Tone.js on the client and create synths + clock.
@@ -98,7 +98,7 @@ export function useToneEngine(
       // The recorder will only capture audio when start() is called
       masterGain.connect(recorder);
 
-      const synths: Partial<Record<InstrumentId, ToneType.ToneAudioNode>> = {
+      const synths: Partial<Record<InstrumentId, any>> = {
         kick: new tone.MembraneSynth().connect(masterGain),
         snare: new tone.NoiseSynth({
           envelope: { attack: 0.001, decay: 0.2, sustain: 0 },
@@ -277,27 +277,27 @@ export function useToneEngine(
 
       // Timbre now controls multiple parameters per instrument for more dramatic sound changes.
       if (id === "kick" || id === "tom") {
-        const drum = synth as unknown as ToneType.MembraneSynth;
+        const drum = synth as any;
         drum.envelope.decay = decay;
         // Wider pitchDecay range (0.01 to 0.2) makes timbre much more noticeable.
         drum.pitchDecay = 0.01 + timbre * 0.19;
         // Also modulate octaves to add more character variation.
         drum.octaves = 1 + timbre * 3;
       } else if (id === "snare") {
-        const noise = synth as unknown as ToneType.NoiseSynth;
+        const noise = synth as any;
         noise.envelope.decay = decay;
         // Timbre modulates volume: low = thinner/quieter, high = punchier/louder.
         // Range from -12dB (thin) to +12dB (punchy) makes timbre very noticeable.
         noise.volume.value = (timbre - 0.5) * 24;
       } else if (id === "hihat") {
-        const metal = synth as unknown as ToneType.MetalSynth;
+        const metal = synth as any;
         metal.envelope.decay = decay;
         // Much wider harmonicity range (1 to 20) for dramatic timbral shifts.
         metal.set({ harmonicity: 1 + timbre * 19 });
         // Also modulate resonance for more character.
         metal.set({ resonance: 200 + timbre * 800 });
       } else if (id === "clap") {
-        const noise = synth as unknown as ToneType.NoiseSynth;
+        const noise = synth as any;
         noise.envelope.decay = decay;
         // Timbre modulates volume for clap: low = thinner, high = punchier
         noise.volume.value = (timbre - 0.5) * 20;
@@ -490,7 +490,7 @@ export function useToneEngine(
 
 function triggerInstrument(
   id: InstrumentId,
-  synth: ToneType.ToneAudioNode,
+  synth: any,
   params: InstrumentParamMap[InstrumentId],
   tone: typeof import("tone"),
   time: number,
@@ -498,22 +498,22 @@ function triggerInstrument(
   const { pitch, decay, timbre } = params;
 
   if (id === "kick") {
-    (synth as ToneType.MembraneSynth).triggerAttackRelease(
+    (synth as any).triggerAttackRelease(
       tone.Frequency(50, "hz").transpose(pitch).toFrequency(),
       decay,
       time,
     );
   } else if (id === "tom") {
-    (synth as ToneType.MembraneSynth).triggerAttackRelease(
+    (synth as any).triggerAttackRelease(
       tone.Frequency(100, "hz").transpose(pitch).toFrequency(),
       decay,
       time,
     );
   } else if (id === "snare") {
-    (synth as ToneType.NoiseSynth).triggerAttackRelease(decay, time);
+    (synth as any).triggerAttackRelease(decay, time);
   } else if (id === "hihat") {
-    (synth as ToneType.MetalSynth).triggerAttackRelease(decay, time);
+    (synth as any).triggerAttackRelease(decay, time);
   } else if (id === "clap") {
-    (synth as ToneType.NoiseSynth).triggerAttackRelease(decay, time);
+    (synth as any).triggerAttackRelease(decay, time);
   }
 }
