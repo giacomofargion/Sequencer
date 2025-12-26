@@ -195,3 +195,4 @@ Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allow
 [01:47:34.996] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
 [01:48:46.906] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff
 [01:49:55.030] Browser WARN    Events scheduled inside of scheduled callbacks should use the passed in scheduling time. See https://github.com/Tonejs/Tone.js/wiki/Accurate-Timing
+[01:57:22.931] Browser LOG     %c * Tone.js v15.1.22 *  background: #000; color: #fff

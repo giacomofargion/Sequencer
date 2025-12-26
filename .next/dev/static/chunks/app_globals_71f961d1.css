@@ -89,7 +89,6 @@
     --color-neutral-200: #e5e5e5;
     --color-neutral-300: #d4d4d4;
     --color-neutral-400: #a1a1a1;
-    --color-neutral-600: #525252;
     --color-neutral-700: #404040;
     --color-white: #fff;
     --spacing: .25rem;
@@ -152,7 +151,6 @@
       --color-neutral-200: lab(90.952% 0 -.0000119209);
       --color-neutral-300: lab(84.92% 0 -.0000119209);
       --color-neutral-400: lab(66.128% -.0000298023 .0000119209);
-      --color-neutral-600: lab(34.924% 0 0);
       --color-neutral-700: lab(27.036% 0 0);
     }
   }
@@ -600,10 +598,6 @@
     max-width: 55px;
   }
 
-  .min-w-\[720px\] {
-    min-width: 720px;
-  }
-
   .flex-1 {
     flex: 1;
   }
@@ -716,10 +710,6 @@
     --tw-space-y-reverse: 0;
     margin-block-start: calc(calc(var(--spacing) * 3) * var(--tw-space-y-reverse));
     margin-block-end: calc(calc(var(--spacing) * 3) * calc(1 - var(--tw-space-y-reverse)));
-  }
-
-  .overflow-x-auto {
-    overflow-x: auto;
   }
 
   .overflow-x-hidden {
@@ -1331,14 +1321,6 @@
     .text-emerald-400\/80 {
       color: color-mix(in oklab, var(--color-emerald-400) 80%, transparent);
     }
-  }
-
-  .text-neutral-300 {
-    color: var(--color-neutral-300);
-  }
-
-  .text-neutral-600 {
-    color: var(--color-neutral-600);
   }
 
   .text-neutral-700 {
