@@ -5,6 +5,7 @@ import {
   createDefaultInstrumentParams,
   createDefaultTransport,
   createEmptyPattern,
+  createDefaultPattern,
   createEmptySynthPattern,
   createDefaultSynthParams,
   NUM_STEPS,
@@ -22,6 +23,7 @@ import { PatternGrid } from "@/components/PatternGrid";
 import { SynthPatternGrid } from "@/components/SynthPatternGrid";
 import { RoomControls } from "@/components/RoomControls";
 import { ChatRoom } from "@/components/ChatRoom";
+import { Tutorial } from "@/components/Tutorial";
 
 type InstrumentView = "drums" | "synth";
 
@@ -32,8 +34,11 @@ export default function SequencerPage() {
   // Instrument view selector
   const [instrumentView, setInstrumentView] = useState<InstrumentView>("drums");
 
+  // Tutorial state
+  const [showTutorial, setShowTutorial] = useState(false);
+
   // Local state for solo mode (when roomId is null)
-  const [localPattern, setLocalPattern] = useState<Pattern>(() => createEmptyPattern());
+  const [localPattern, setLocalPattern] = useState<Pattern>(() => createDefaultPattern());
   const [localInstrumentParams, setLocalInstrumentParams] =
     useState<InstrumentParamMap>(() => createDefaultInstrumentParams());
   const [localSynthPattern, setLocalSynthPattern] = useState<SynthPattern>(() =>
@@ -59,6 +64,28 @@ export default function SequencerPage() {
 
   // Tone engine uses current pattern/params
   const engine = useToneEngine(transport, pattern, instrumentParams, synthPattern, synthParams);
+
+  // Check if user has completed tutorial (stored in localStorage)
+  useEffect(() => {
+    const hasCompletedTutorial = localStorage.getItem("sequencer_tutorial_completed");
+    if (!hasCompletedTutorial) {
+      // Show tutorial on first visit after a short delay
+      const timer = setTimeout(() => {
+        setShowTutorial(true);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handleTutorialComplete = () => {
+    localStorage.setItem("sequencer_tutorial_completed", "true");
+    setShowTutorial(false);
+  };
+
+  const handleTutorialSkip = () => {
+    localStorage.setItem("sequencer_tutorial_completed", "true");
+    setShowTutorial(false);
+  };
 
   // Sync room state changes to Tone engine
   useEffect(() => {
@@ -183,6 +210,45 @@ export default function SequencerPage() {
     }
   };
 
+  const handleOctaveChange = (newOctave: number, oldOctave: number) => {
+    // Shift all active notes by the octave difference
+    const octaveDiff = newOctave - oldOctave;
+    if (octaveDiff === 0) return; // No change
+
+    // Calculate semitone shift (12 semitones per octave)
+    const semitoneShift = octaveDiff * 12;
+
+    const shiftNotes = (pattern: SynthPattern): SynthPattern => {
+      return pattern.map((row) =>
+        row.map((step) => {
+          if (step.active) {
+            // Shift the MIDI note by the semitone difference
+            const newNote = step.note + semitoneShift;
+            // Clamp to valid MIDI range (0-127)
+            const clampedNote = Math.max(0, Math.min(127, newNote));
+            return { ...step, note: clampedNote };
+          }
+          return { ...step };
+        }),
+      );
+    };
+
+    if (roomId) {
+      // Use room sync
+      if (roomSync.roomState) {
+        const updatedPattern = shiftNotes(roomSync.roomState.synthPattern);
+        roomSync.updateSynthPattern(updatedPattern);
+      }
+    } else {
+      // Local solo mode
+      setLocalSynthPattern((prev) => {
+        const updated = shiftNotes(prev);
+        engine.updateSynthPattern(updated);
+        return updated;
+      });
+    }
+  };
+
   const handleClearDrums = () => {
     const emptyPattern = createEmptyPattern();
     if (roomId) {
@@ -230,58 +296,75 @@ export default function SequencerPage() {
 
   return (
     <main className="flex flex-1 flex-col gap-6">
-      <header className="flex flex-col sm:flex-row items-start sm:items-baseline justify-between gap-3 sm:gap-4 border-b border-slate-700/50 pb-4 backdrop-blur-sm">
+      <header className="flex flex-col sm:flex-row items-start sm:items-baseline justify-between gap-3 sm:gap-4 border-b border-slate-700/50 pb-3 sm:pb-4 backdrop-blur-sm">
         <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-emerald-400/70 font-semibold mb-1">
+          <p className="text-[10px] sm:text-xs uppercase tracking-[0.25em] text-emerald-400/70 font-semibold mb-1">
             Fargion
           </p>
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-emerald-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-emerald-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent">
             Sequencer
           </h1>
         </div>
-        <RoomControls
-          roomId={roomId}
-          isConnected={roomSync.isConnected}
-          participantCount={roomSync.participants.length + (roomId ? 1 : 0)}
-          onRoomChange={setRoomId}
-          onNameChange={() => {
-            // Update presence when name changes
-            if (roomId) {
-              roomSync.updatePresence();
-            }
-          }}
-        />
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              localStorage.removeItem("sequencer_tutorial_completed");
+              setShowTutorial(true);
+            }}
+            className="text-[9px] sm:text-[10px] text-slate-400 hover:text-slate-200 underline transition-colors"
+            title="Start tutorial"
+          >
+            Tutorial
+          </button>
+          <div data-tutorial="room-controls">
+            <RoomControls
+              roomId={roomId}
+              isConnected={roomSync.isConnected}
+              participantCount={roomSync.participants.length + (roomId ? 1 : 0)}
+              onRoomChange={setRoomId}
+              onNameChange={() => {
+                // Update presence when name changes
+                if (roomId) {
+                  roomSync.updatePresence();
+                }
+              }}
+            />
+          </div>
+        </div>
       </header>
 
-      <div className="flex flex-1 gap-4">
-        <section className="relative flex flex-1 flex-col rounded-xl border border-slate-700/50 bg-slate-800/40 backdrop-blur-xl p-6 shadow-2xl">
+      <div className="flex flex-col lg:flex-row flex-1 gap-4">
+        <section className="relative flex flex-1 flex-col rounded-xl border border-slate-700/50 bg-slate-800/40 backdrop-blur-xl p-4 sm:p-6 shadow-2xl">
           {roomSync.error && (
             <div className="mb-4 rounded-lg border border-red-500/50 bg-red-900/20 backdrop-blur-sm p-3 text-xs text-red-300">
               {roomSync.error}
             </div>
           )}
 
-          <TransportControls
-            tempo={engine.transport.tempo}
-            startStep={engine.transport.startStep}
-            endStep={engine.transport.endStep}
-            maxSteps={NUM_STEPS}
-            isPlaying={engine.transport.isPlaying}
-            isRecording={engine.isRecording}
-            isReady={engine.ready}
-            onTempoChange={handleTransportChange.tempo}
-            onRangeChange={handleTransportChange.range}
-            onTogglePlay={handleTransportChange.togglePlay}
-            onStartRecording={engine.startRecording}
-            onStopRecording={engine.stopRecording}
-          />
+          <div data-tutorial="transport-controls">
+            <TransportControls
+              tempo={engine.transport.tempo}
+              startStep={engine.transport.startStep}
+              endStep={engine.transport.endStep}
+              maxSteps={NUM_STEPS}
+              isPlaying={engine.transport.isPlaying}
+              isRecording={engine.isRecording}
+              isReady={engine.ready}
+              onTempoChange={handleTransportChange.tempo}
+              onRangeChange={handleTransportChange.range}
+              onTogglePlay={handleTransportChange.togglePlay}
+              onStartRecording={engine.startRecording}
+              onStopRecording={engine.stopRecording}
+            />
+          </div>
 
           {/* Instrument view selector */}
-          <div className="mt-4 flex gap-2 border-b border-slate-700/50 pb-2">
+          <div className="mt-4 flex gap-2 border-b border-slate-700/50 pb-2" data-tutorial="instrument-tabs">
             <button
               type="button"
               onClick={() => setInstrumentView("drums")}
-              className={`px-4 py-2 text-sm font-medium transition-all rounded-t-lg ${
+              className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-all rounded-t-lg ${
                 instrumentView === "drums"
                   ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30"
                   : "bg-slate-700/30 text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
@@ -292,7 +375,7 @@ export default function SequencerPage() {
             <button
               type="button"
               onClick={() => setInstrumentView("synth")}
-              className={`px-4 py-2 text-sm font-medium transition-all rounded-t-lg ${
+              className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-all rounded-t-lg ${
                 instrumentView === "synth"
                   ? "bg-gradient-to-r from-cyan-500 to-cyan-600 text-white shadow-lg shadow-cyan-500/30"
                   : "bg-slate-700/30 text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
@@ -322,6 +405,7 @@ export default function SequencerPage() {
               onToggleStep={handleSynthStepToggle}
               onParamChange={handleSynthParamChange}
               onClear={handleClearSynth}
+              onOctaveChange={handleOctaveChange}
             />
           )}
 
@@ -338,7 +422,7 @@ export default function SequencerPage() {
         </section>
 
         {roomId && (
-          <aside className="w-80 shrink-0">
+          <aside className="w-full lg:w-80 shrink-0">
             <ChatRoom
               messages={roomSync.chatMessages}
               onSendMessage={roomSync.sendChatMessage}
@@ -346,6 +430,12 @@ export default function SequencerPage() {
           </aside>
         )}
       </div>
+
+      <Tutorial
+        isActive={showTutorial}
+        onComplete={handleTutorialComplete}
+        onSkip={handleTutorialSkip}
+      />
     </main>
   );
 }

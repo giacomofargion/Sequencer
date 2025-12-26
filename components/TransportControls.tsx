@@ -81,12 +81,12 @@ export const TransportControls: FC<Props> = ({
   };
 
   return (
-    <section className="flex items-center justify-between border-b border-slate-700/50 pb-4 text-xs">
-      <div className="flex items-center gap-3">
+    <section className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 border-b border-slate-700/50 pb-3 sm:pb-4 text-xs">
+      <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
         <button
           type="button"
           onClick={onTogglePlay}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-600/50 bg-slate-700/50 backdrop-blur-sm text-sm font-bold text-emerald-400 shadow-lg transition-all hover:bg-slate-700/70 hover:border-emerald-500/50 hover:shadow-emerald-500/20 active:scale-95"
+          className="flex h-9 sm:h-10 w-9 sm:w-10 items-center justify-center rounded-full border border-slate-600/50 bg-slate-700/50 backdrop-blur-sm text-xs sm:text-sm font-bold text-emerald-400 shadow-lg transition-all hover:bg-slate-700/70 hover:border-emerald-500/50 hover:shadow-emerald-500/20 active:scale-95"
         >
           {isPlaying ? "❚❚" : "▶"}
         </button>
@@ -94,7 +94,7 @@ export const TransportControls: FC<Props> = ({
           type="button"
           onClick={handleRecordToggle}
           disabled={isProcessing || !isReady}
-          className={`flex h-10 w-10 items-center justify-center rounded-full border text-sm font-bold shadow-lg transition-all ${
+          className={`flex h-9 sm:h-10 w-9 sm:w-10 items-center justify-center rounded-full border text-xs sm:text-sm font-bold shadow-lg transition-all ${
             isRecording
               ? "border-red-500/70 bg-red-900/40 text-red-400 animate-pulse shadow-red-500/30"
               : "border-slate-600/50 bg-slate-700/50 text-slate-400 hover:bg-slate-700/70 hover:border-slate-500 hover:text-slate-300"
@@ -109,8 +109,8 @@ export const TransportControls: FC<Props> = ({
         >
           {isRecording ? "●" : "○"}
         </button>
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-xs uppercase tracking-[0.2em] text-slate-400">
+        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-[140px]">
+          <span className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] text-slate-400 whitespace-nowrap">
             Tempo
           </span>
           <input
@@ -119,16 +119,16 @@ export const TransportControls: FC<Props> = ({
             max={180}
             value={tempo}
             onChange={(e) => onTempoChange(Number(e.target.value))}
-            className="h-1.5 w-40 accent-emerald-500"
+            className="h-1.5 flex-1 sm:w-40 accent-emerald-500"
           />
-          <span className="w-12 text-right font-mono text-sm font-semibold text-emerald-400">
+          <span className="w-10 sm:w-12 text-right font-mono text-xs sm:text-sm font-semibold text-emerald-400 whitespace-nowrap">
             {tempo}
           </span>
         </div>
       </div>
 
-      <div className="flex items-center gap-6">
-        <label className="flex flex-col gap-1.5">
+      <div className="flex items-center gap-3 sm:gap-6">
+        <label className="flex flex-col gap-1.5 flex-1 sm:flex-none">
           <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-slate-400 font-semibold">
             Start
           </span>
@@ -138,10 +138,10 @@ export const TransportControls: FC<Props> = ({
             max={maxSteps}
             value={startStep + 1}
             onChange={(e) => handleStartChange(Number(e.target.value) - 1)}
-            className="w-20 rounded-lg border border-slate-600/50 bg-slate-800/50 backdrop-blur-sm px-3 py-2 text-center font-mono text-sm font-semibold text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all hover:border-slate-500/50"
+            className="w-full sm:w-20 rounded-lg border border-slate-600/50 bg-slate-800/50 backdrop-blur-sm px-2 sm:px-3 py-1.5 sm:py-2 text-center font-mono text-xs sm:text-sm font-semibold text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all hover:border-slate-500/50"
           />
         </label>
-        <label className="flex flex-col gap-1.5">
+        <label className="flex flex-col gap-1.5 flex-1 sm:flex-none">
           <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-slate-400 font-semibold">
             End
           </span>
@@ -151,7 +151,7 @@ export const TransportControls: FC<Props> = ({
             max={maxSteps}
             value={endStep + 1}
             onChange={(e) => handleEndChange(Number(e.target.value) - 1)}
-            className="w-20 rounded-lg border border-slate-600/50 bg-slate-800/50 backdrop-blur-sm px-3 py-2 text-center font-mono text-sm font-semibold text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all hover:border-slate-500/50"
+            className="w-full sm:w-20 rounded-lg border border-slate-600/50 bg-slate-800/50 backdrop-blur-sm px-2 sm:px-3 py-1.5 sm:py-2 text-center font-mono text-xs sm:text-sm font-semibold text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all hover:border-slate-500/50"
           />
         </label>
       </div>

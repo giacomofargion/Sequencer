@@ -47,6 +47,40 @@ export function createEmptyPattern(steps: number = NUM_STEPS): Pattern {
   );
 }
 
+// Create a default template beat for better UX
+// Classic 4/4 pattern: Kick on 1, 5, 9, 13; Hihat on 3, 7, 11, 15; Clap on 5, 13
+export function createDefaultPattern(steps: number = NUM_STEPS): Pattern {
+  const pattern = createEmptyPattern(steps);
+
+  // Kick: Steps 1, 5, 9, 13 (0-indexed: 0, 4, 8, 12) - classic 4/4 kick pattern
+  const kickIndex = INSTRUMENTS.indexOf("kick");
+  if (kickIndex !== -1) {
+    [0, 4, 8, 12].forEach(step => {
+      if (step < steps) pattern[kickIndex][step].active = true;
+    });
+  }
+
+  // Hihat: Steps 3, 7, 11, 15 (0-indexed: 2, 6, 10, 14) - off-beat hihat pattern
+  const hihatIndex = INSTRUMENTS.indexOf("hihat");
+  if (hihatIndex !== -1) {
+    [2, 6, 10, 14].forEach(step => {
+      if (step < steps) pattern[hihatIndex][step].active = true;
+    });
+  }
+
+  // Clap: Steps 5, 13 (0-indexed: 4, 12) - accent on beats 2 and 4
+  const clapIndex = INSTRUMENTS.indexOf("clap");
+  if (clapIndex !== -1) {
+    [4, 12].forEach(step => {
+      if (step < steps) pattern[clapIndex][step].active = true;
+    });
+  }
+
+  // Snare and Tom remain empty (user can add them)
+
+  return pattern;
+}
+
 export function createDefaultTransport(): TransportState {
   return {
     isPlaying: false,
@@ -128,6 +162,8 @@ export type SyncMessage =
   | { type: "participant_leave"; participantId: string }
   | { type: "full_sync"; state: RoomState } // Initial sync on join
   | { type: "chat_message"; message: ChatMessage } // Chat message
+  | { type: "clear_pattern"; userId: string; timestamp: number } // Clear drum pattern
+  | { type: "clear_synth_pattern"; userId: string; timestamp: number } // Clear synth pattern
   | { type: "synth_step_toggle"; row: number; col: number; note: number; userId: string; timestamp: number } // Synth sequencer step toggle
   | {
       type: "synth_param_change";

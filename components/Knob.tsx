@@ -73,11 +73,11 @@ export const Knob: FC<Props> = ({
   };
 
   return (
-    <div className="flex flex-col items-center gap-1">
+    <div className="flex flex-col items-center gap-0.5 sm:gap-1">
       <div
         ref={knobRef}
         onPointerDown={handlePointerDown}
-        className="relative h-12 w-12 cursor-grab active:cursor-grabbing select-none"
+        className="relative h-10 w-10 sm:h-12 sm:w-12 cursor-grab active:cursor-grabbing select-none touch-none"
         aria-label={label}
         role="slider"
         aria-valuemin={min}
@@ -105,14 +105,16 @@ export const Knob: FC<Props> = ({
 
         {/* Value display */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-[9px] font-mono font-semibold text-neutral-700">
+          <span className="text-[8px] sm:text-[9px] font-mono font-semibold text-neutral-700">
             {formatValue(value)}
           </span>
         </div>
       </div>
-      <span className="text-[8px] font-medium uppercase tracking-wider text-white text-center max-w-[55px] leading-tight">
-        {label}
-      </span>
+      {label && (
+        <span className="text-[7px] sm:text-[8px] font-medium uppercase tracking-wider text-white text-center max-w-[55px] leading-tight">
+          {label}
+        </span>
+      )}
     </div>
   );
 };

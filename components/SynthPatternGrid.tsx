@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { FC } from "react";
 import type { SynthPattern, SynthParams } from "@/types/sequencer";
 import { Knob } from "@/components/Knob";
@@ -12,6 +12,7 @@ type Props = {
   onToggleStep: (row: number, col: number, note: number) => void;
   onParamChange: (field: keyof SynthParams, value: number) => void;
   onClear?: () => void;
+  onOctaveChange?: (newOctave: number, oldOctave: number) => void;
 };
 
 // MIDI note to note name mapping
@@ -37,9 +38,27 @@ export const SynthPatternGrid: FC<Props> = ({
   onToggleStep,
   onParamChange,
   onClear,
+  onOctaveChange,
 }) => {
   const [octave, setOctave] = useState(3); // Default to octave 3 (C3-C4 range)
+  const prevOctaveRef = useRef(3);
+  const isInitialMount = useRef(true);
   const steps = pattern[0] ?? [];
+
+  // Handle octave changes and shift notes in real-time
+  useEffect(() => {
+    // Skip on initial mount
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      prevOctaveRef.current = octave;
+      return;
+    }
+
+    if (octave !== prevOctaveRef.current && onOctaveChange) {
+      onOctaveChange(octave, prevOctaveRef.current);
+      prevOctaveRef.current = octave;
+    }
+  }, [octave, onOctaveChange]);
 
   const handleStepClick = (row: number, col: number) => {
     const step = pattern[row]?.[col];
@@ -56,22 +75,22 @@ export const SynthPatternGrid: FC<Props> = ({
 
   return (
     <section className="mt-3 flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <div className="font-mono text-xs uppercase tracking-[0.2em] text-cyan-400/80 font-semibold">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+        <div className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] text-cyan-400/80 font-semibold">
           FM Synthesizer Sequencer
         </div>
-        {onClear && (
-          <button
-            type="button"
-            onClick={onClear}
-            className="px-4 py-2 text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg transition-all border border-slate-600/50 hover:border-slate-500 active:scale-95 backdrop-blur-sm"
-          >
-            Clear All
-          </button>
-        )}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-slate-300">Octave:</label>
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+          {onClear && (
+            <button
+              type="button"
+              onClick={onClear}
+              className="px-3 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg transition-all border border-slate-600/50 hover:border-slate-500 active:scale-95 backdrop-blur-sm"
+            >
+              Clear All
+            </button>
+          )}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <label className="text-[10px] sm:text-xs text-slate-300 whitespace-nowrap">Octave:</label>
             <Knob
               label=""
               min={0}
@@ -80,36 +99,39 @@ export const SynthPatternGrid: FC<Props> = ({
               value={octave}
               onChange={setOctave}
             />
-            <span className="text-xs font-mono text-slate-200 font-semibold w-8">{octave}</span>
+            <span className="text-[10px] sm:text-xs font-mono text-slate-200 font-semibold w-6 sm:w-8">{octave}</span>
           </div>
         </div>
       </div>
 
-      <div className="overflow-x-hidden">
-        <div className="w-full rounded-lg border border-slate-700/50 bg-slate-900/40 backdrop-blur-sm shadow-xl">
-          <div className="flex border-b border-slate-700/50 bg-slate-800/50 text-[9px] font-mono uppercase tracking-[0.18em] text-slate-400">
-            <div className="flex w-24 items-center justify-end px-2">Note</div>
-            <div className="flex flex-1">
+      <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+        <div className="min-w-full rounded-lg border border-slate-700/50 bg-slate-900/40 backdrop-blur-sm shadow-xl">
+          <div className="flex border-b border-slate-700/50 bg-slate-800/50 text-[8px] sm:text-[9px] font-mono uppercase tracking-[0.18em] text-slate-400">
+            <div className="flex w-16 sm:w-24 items-center justify-end px-1 sm:px-2 shrink-0">Note</div>
+            <div className="flex flex-1 min-w-0">
               {steps.map((_, col) => {
                 const isCurrent = col === currentStep;
                 return (
                   <div
                     key={col}
-                    className={`flex h-7 flex-1 items-center justify-center border-l border-slate-700/50 ${
+                    className={`flex h-6 sm:h-7 flex-1 min-w-[24px] sm:min-w-0 items-center justify-center border-l border-slate-700/50 ${
                       isCurrent ? "bg-cyan-500/20 text-cyan-400" : "text-slate-500"
                     }`}
                   >
-                    {col + 1}
+                    <span className="text-[8px] sm:text-[9px]">{col + 1}</span>
                   </div>
                 );
               })}
             </div>
-            <div className="flex w-24 items-center justify-center border-l border-slate-700/50 px-2 text-[9px] text-slate-400">
+            <div className="flex w-16 sm:w-24 items-center justify-center border-l border-slate-700/50 px-1 sm:px-2 text-[8px] sm:text-[9px] text-slate-400 shrink-0">
               Note
             </div>
           </div>
 
-          {pattern.map((row, rowIndex) => {
+          {pattern.slice().reverse().map((row, displayIndex) => {
+            // Reverse the display order: B at top, C at bottom
+            // Calculate actual rowIndex from display position
+            const rowIndex = pattern.length - 1 - displayIndex;
             const noteName = NOTE_NAMES[rowIndex];
             const midiNote = rowToMidiNote(rowIndex, octave);
             const noteLabel = `${noteName}${octave}`;
@@ -131,12 +153,12 @@ export const SynthPatternGrid: FC<Props> = ({
       </div>
 
       {/* All Parameters in One Section */}
-      <div className="mt-4 rounded-lg border border-slate-700/50 bg-gradient-to-br from-slate-800/60 to-slate-900/40 backdrop-blur-sm p-4 shadow-xl">
-        <div className="mb-3 font-mono text-xs uppercase tracking-[0.2em] text-cyan-400/80 font-semibold">
+      <div className="mt-4 rounded-lg border border-slate-700/50 bg-gradient-to-br from-slate-800/60 to-slate-900/40 backdrop-blur-sm p-3 sm:p-4 shadow-xl">
+        <div className="mb-3 font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] text-cyan-400/80 font-semibold">
           FM Synthesis Parameters
         </div>
 
-        <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 justify-items-center">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6 justify-items-center">
           {/* Pitch Section */}
           <div className="space-y-2">
             <div className="text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wide">
@@ -290,12 +312,12 @@ const SynthRow: FC<SynthRowProps> = ({
 
   return (
     <div className={`flex border-t border-slate-700/50 ${isBlackKey ? "bg-slate-800/30" : ""}`}>
-      <div className={`flex w-24 items-center justify-end px-2 text-[11px] font-medium ${
+      <div className={`flex w-16 sm:w-24 items-center justify-end px-1 sm:px-2 text-[9px] sm:text-[11px] font-medium shrink-0 ${
         isBlackKey ? "bg-slate-800/60 text-cyan-300" : "bg-slate-800/40 text-cyan-400"
       }`}>
-        {noteLabel}
+        <span className="truncate">{noteLabel}</span>
       </div>
-      <div className="flex flex-1">
+      <div className="flex flex-1 min-w-0">
         {rowSteps.map((step, col) => {
           const isCurrent = col === currentStep;
           const isActive = step.active;
@@ -310,7 +332,7 @@ const SynthRow: FC<SynthRowProps> = ({
               key={col}
               type="button"
               onClick={() => onStepClick(rowIndex, col)}
-              className={`h-8 flex-1 border-l border-slate-700/50 transition-all ${
+              className={`h-7 sm:h-8 flex-1 min-w-[24px] sm:min-w-0 border-l border-slate-700/50 transition-all ${
                 isActive && noteMatches
                   ? isBlackKey
                     ? "bg-cyan-600/60 text-cyan-100 hover:bg-cyan-600/70"
@@ -319,18 +341,18 @@ const SynthRow: FC<SynthRowProps> = ({
               } ${isCurrent ? "ring-2 ring-cyan-400/50 shadow-lg shadow-cyan-500/20" : ""}`}
             >
               {isActive && noteMatches ? (
-                <span className="text-xs">●</span>
+                <span className="text-[10px] sm:text-xs">●</span>
               ) : (
-                <span className="text-[10px] text-slate-500">·</span>
+                <span className="text-[8px] sm:text-[10px] text-slate-500">·</span>
               )}
             </button>
           );
         })}
       </div>
-      <div className={`flex w-24 items-center justify-center border-l border-slate-700/50 px-2 bg-slate-800/30 ${
+      <div className={`flex w-16 sm:w-24 items-center justify-center border-l border-slate-700/50 px-1 sm:px-2 bg-slate-800/30 shrink-0 ${
         isBlackKey ? "bg-slate-800/40" : ""
       }`}>
-        <span className="text-[10px] text-slate-500 font-mono">{noteLabel}</span>
+        <span className="text-[8px] sm:text-[10px] text-slate-500 font-mono truncate">{noteLabel}</span>
       </div>
     </div>
   );
