@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import type { FC } from "react";
 import {
   INSTRUMENTS,
@@ -29,6 +32,29 @@ export const PatternGrid: FC<Props> = ({
   onClear,
 }) => {
   const steps = pattern[0] ?? [];
+  const [mobileStepRange, setMobileStepRange] = useState<"1-8" | "9-16">("1-8");
+  const [isMobile, setIsMobile] = useState(false);
+  const [soundControlsOpen, setSoundControlsOpen] = useState(false);
+
+  // Track mobile state
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // On mobile, determine which steps to show based on selected range
+  const getVisibleSteps = () => {
+    if (mobileStepRange === "1-8") {
+      return Array.from({ length: 8 }, (_, i) => i);
+    } else {
+      return Array.from({ length: 8 }, (_, i) => i + 8);
+    }
+  };
+  const visibleSteps = getVisibleSteps();
 
   return (
     <section className="mt-3 flex flex-col gap-3" data-tutorial="pattern-grid">
@@ -36,27 +62,75 @@ export const PatternGrid: FC<Props> = ({
         <div className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] text-emerald-400/80 font-semibold">
           Pattern
         </div>
-        {onClear && (
+        <div className="flex items-center gap-2">
+          {/* Mobile step range toggle - only visible on mobile */}
+          <div className="sm:hidden flex items-center gap-1 rounded-lg border border-slate-600/50 bg-slate-800/50 p-0.5">
+            <button
+              type="button"
+              onClick={() => setMobileStepRange("1-8")}
+              className={`px-2.5 py-1 text-[10px] font-medium rounded transition-all ${
+                mobileStepRange === "1-8"
+                  ? "bg-emerald-500/30 text-emerald-300 border border-emerald-400/50"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              1-8
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileStepRange("9-16")}
+              className={`px-2.5 py-1 text-[10px] font-medium rounded transition-all ${
+                mobileStepRange === "9-16"
+                  ? "bg-emerald-500/30 text-emerald-300 border border-emerald-400/50"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              9-16
+            </button>
+          </div>
+          {/* Mobile sound controls toggle - only visible on mobile */}
           <button
             type="button"
-            onClick={onClear}
-            className="px-3 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg transition-all border border-slate-600/50 hover:border-slate-500 active:scale-95 backdrop-blur-sm"
+            onClick={() => setSoundControlsOpen(!soundControlsOpen)}
+            className={`sm:hidden flex items-center justify-center px-3 py-1.5 rounded-lg transition-all border ${
+              soundControlsOpen
+                ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/50 hover:bg-emerald-500/30"
+                : "bg-slate-700/50 text-slate-300 border-slate-600/50 hover:bg-slate-600/50 hover:text-white"
+            }`}
+            aria-label={soundControlsOpen ? "Close sound controls" : "Open sound controls"}
           >
-            Clear All
+            <svg
+              className={`w-4 h-4 mr-1.5 transition-transform duration-300 ${soundControlsOpen ? "rotate-180" : ""}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+            </svg>
+            <span className="text-[10px] font-medium">Params</span>
           </button>
-        )}
+          {onClear && (
+            <button
+              type="button"
+              onClick={onClear}
+              className="px-3 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg transition-all border border-slate-600/50 hover:border-slate-500 active:scale-95 backdrop-blur-sm"
+            >
+              Clear All
+            </button>
+          )}
+        </div>
       </div>
       <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
         <div className="min-w-full rounded-lg border border-slate-700/50 bg-slate-900/40 backdrop-blur-sm shadow-xl">
           <div className="flex border-b border-slate-700/50 bg-slate-800/50 text-[8px] sm:text-[9px] font-mono uppercase tracking-[0.18em] text-slate-400">
             <div className="flex w-12 sm:w-16 items-center justify-end px-1 sm:px-2 shrink-0">Row</div>
             <div className="flex flex-1 min-w-0">
-              {steps.map((_, col) => {
+              {(isMobile ? visibleSteps : steps.map((_, i) => i)).map((col) => {
                 const isCurrent = col === currentStep;
                 return (
                   <div
                     key={col}
-                    className={`flex h-6 sm:h-7 flex-1 min-w-[24px] sm:min-w-0 items-center justify-center border-l border-slate-700/50 ${
+                    className={`flex h-6 sm:h-7 flex-1 ${isMobile ? "min-w-[32px]" : "min-w-[24px]"} sm:min-w-0 items-center justify-center border-l border-slate-700/50 ${
                       isCurrent ? "bg-emerald-500/20 text-emerald-400" : "text-slate-500"
                     }`}
                   >
@@ -65,8 +139,16 @@ export const PatternGrid: FC<Props> = ({
                 );
               })}
             </div>
-            <div className="flex w-32 sm:w-48 items-center justify-center border-l border-slate-700/50 px-1 sm:px-2 text-[8px] sm:text-[9px] text-slate-400 shrink-0">
-              Sound
+            <div
+              className={`overflow-hidden border-l border-slate-700/50 bg-slate-800/50 transition-all duration-300 ease-in-out shrink-0 ${
+                soundControlsOpen ? "w-44 sm:w-48" : "w-0 sm:w-44"
+              }`}
+            >
+              <div className={`flex items-center justify-center px-2 sm:px-2 h-6 sm:h-7 transition-opacity duration-300 ${
+                soundControlsOpen ? "opacity-100" : "opacity-0 sm:opacity-100"
+              }`}>
+                <span className="text-[8px] sm:text-[9px]">Sound</span>
+              </div>
             </div>
           </div>
 
@@ -80,6 +162,9 @@ export const PatternGrid: FC<Props> = ({
               params={instrumentParams[instrument]}
               onToggleStep={onToggleStep}
               onParamChange={onInstrumentParamChange}
+              visibleSteps={isMobile ? visibleSteps : []}
+              isMobile={isMobile}
+              soundControlsOpen={soundControlsOpen}
             />
           ))}
         </div>
@@ -100,6 +185,9 @@ type RowProps = {
     field: "pitch" | "decay" | "timbre",
     value: number,
   ) => void;
+  visibleSteps: number[];
+  isMobile: boolean;
+  soundControlsOpen: boolean;
 };
 
 const Row: FC<RowProps> = ({
@@ -110,6 +198,9 @@ const Row: FC<RowProps> = ({
   params,
   onToggleStep,
   onParamChange,
+  visibleSteps,
+  isMobile,
+  soundControlsOpen,
 }) => {
   return (
     <div className="flex border-t border-slate-700/50">
@@ -117,7 +208,8 @@ const Row: FC<RowProps> = ({
         <span className="truncate">{instrument}</span>
       </div>
       <div className="flex flex-1 min-w-0">
-        {rowSteps.map((step, col) => {
+        {(isMobile && visibleSteps.length > 0 ? visibleSteps : rowSteps.map((_, i) => i)).map((col) => {
+          const step = rowSteps[col];
           const isCurrent = col === currentStep;
           const isActive = step.active;
           return (
@@ -125,7 +217,7 @@ const Row: FC<RowProps> = ({
               key={col}
               type="button"
               onClick={() => onToggleStep(rowIndex, col)}
-              className={`h-8 sm:h-9 flex-1 min-w-[24px] sm:min-w-0 border-l border-slate-700/50 transition-all ${
+              className={`h-8 sm:h-9 flex-1 ${isMobile ? "min-w-[32px]" : "min-w-[24px]"} sm:min-w-0 border-l border-slate-700/50 transition-all ${
                 isActive
                   ? "bg-emerald-500/30 text-emerald-300 hover:bg-emerald-500/40"
                   : "bg-slate-900/30 hover:bg-slate-800/50"
@@ -140,31 +232,40 @@ const Row: FC<RowProps> = ({
           );
         })}
       </div>
-      <div className="flex w-32 sm:w-48 items-center justify-center gap-1 sm:gap-2 border-l border-slate-700/50 bg-slate-800/30 px-1 sm:px-3 py-1 sm:py-2 shrink-0" data-tutorial="sound-controls">
-        <Knob
-          label="Pitch"
-          min={-24}
-          max={24}
-          step={1}
-          value={params.pitch}
-          onChange={(v) => onParamChange(instrument, "pitch", v)}
-        />
-        <Knob
-          label="Decay"
-          min={0.1}
-          max={1.5}
-          step={0.05}
-          value={params.decay}
-          onChange={(v) => onParamChange(instrument, "decay", v)}
-        />
-        <Knob
-          label="Timbre"
-          min={0}
-          max={1}
-          step={0.05}
-          value={params.timbre}
-          onChange={(v) => onParamChange(instrument, "timbre", v)}
-        />
+      <div
+        className={`overflow-hidden border-l border-slate-700/50 bg-slate-800/30 transition-all duration-300 ease-in-out shrink-0 ${
+          soundControlsOpen ? "w-44 sm:w-48" : "w-0 sm:w-44 sm:opacity-100"
+        }`}
+        data-tutorial="sound-controls"
+      >
+        <div className={`flex items-center justify-center gap-2.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 whitespace-nowrap transition-opacity duration-300 ${
+          soundControlsOpen ? "opacity-100" : "opacity-0 sm:opacity-100"
+        }`}>
+          <Knob
+            label="Pitch"
+            min={-24}
+            max={24}
+            step={1}
+            value={params.pitch}
+            onChange={(v) => onParamChange(instrument, "pitch", v)}
+          />
+          <Knob
+            label="Decay"
+            min={0.1}
+            max={1.5}
+            step={0.05}
+            value={params.decay}
+            onChange={(v) => onParamChange(instrument, "decay", v)}
+          />
+          <Knob
+            label="Timbre"
+            min={0}
+            max={1}
+            step={0.05}
+            value={params.timbre}
+            onChange={(v) => onParamChange(instrument, "timbre", v)}
+          />
+        </div>
       </div>
     </div>
   );

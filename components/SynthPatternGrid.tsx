@@ -44,6 +44,29 @@ export const SynthPatternGrid: FC<Props> = ({
   const prevOctaveRef = useRef(3);
   const isInitialMount = useRef(true);
   const steps = pattern[0] ?? [];
+  const [mobileStepRange, setMobileStepRange] = useState<"1-8" | "9-16">("1-8");
+  const [isMobile, setIsMobile] = useState(false);
+  const [soundControlsOpen, setSoundControlsOpen] = useState(false);
+
+  // Track mobile state
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // On mobile, determine which steps to show based on selected range
+  const getVisibleSteps = () => {
+    if (mobileStepRange === "1-8") {
+      return Array.from({ length: 8 }, (_, i) => i);
+    } else {
+      return Array.from({ length: 8 }, (_, i) => i + 8);
+    }
+  };
+  const visibleSteps = getVisibleSteps();
 
   // Handle octave changes and shift notes in real-time
   useEffect(() => {
@@ -80,6 +103,52 @@ export const SynthPatternGrid: FC<Props> = ({
           FM Synthesizer Sequencer
         </div>
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+          {/* Mobile step range toggle - only visible on mobile */}
+          <div className="sm:hidden flex items-center gap-1 rounded-lg border border-slate-600/50 bg-slate-800/50 p-0.5">
+            <button
+              type="button"
+              onClick={() => setMobileStepRange("1-8")}
+              className={`px-2.5 py-1 text-[10px] font-medium rounded transition-all ${
+                mobileStepRange === "1-8"
+                  ? "bg-cyan-500/30 text-cyan-300 border border-cyan-400/50"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              1-8
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileStepRange("9-16")}
+              className={`px-2.5 py-1 text-[10px] font-medium rounded transition-all ${
+                mobileStepRange === "9-16"
+                  ? "bg-cyan-500/30 text-cyan-300 border border-cyan-400/50"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              9-16
+            </button>
+          </div>
+          {/* Mobile sound controls toggle - only visible on mobile */}
+          <button
+            type="button"
+            onClick={() => setSoundControlsOpen(!soundControlsOpen)}
+            className={`sm:hidden flex items-center justify-center px-3 py-1.5 rounded-lg transition-all border ${
+              soundControlsOpen
+                ? "bg-cyan-500/20 text-cyan-300 border-cyan-400/50 hover:bg-cyan-500/30"
+                : "bg-slate-700/50 text-slate-300 border-slate-600/50 hover:bg-slate-600/50 hover:text-white"
+            }`}
+            aria-label={soundControlsOpen ? "Close sound controls" : "Open sound controls"}
+          >
+            <svg
+              className={`w-4 h-4 mr-1.5 transition-transform duration-300 ${soundControlsOpen ? "rotate-180" : ""}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+            </svg>
+            <span className="text-[10px] font-medium">Params</span>
+          </button>
           {onClear && (
             <button
               type="button"
@@ -109,12 +178,12 @@ export const SynthPatternGrid: FC<Props> = ({
           <div className="flex border-b border-slate-700/50 bg-slate-800/50 text-[8px] sm:text-[9px] font-mono uppercase tracking-[0.18em] text-slate-400">
             <div className="flex w-16 sm:w-24 items-center justify-end px-1 sm:px-2 shrink-0">Note</div>
             <div className="flex flex-1 min-w-0">
-              {steps.map((_, col) => {
+              {(isMobile ? visibleSteps : steps.map((_, i) => i)).map((col) => {
                 const isCurrent = col === currentStep;
                 return (
                   <div
                     key={col}
-                    className={`flex h-6 sm:h-7 flex-1 min-w-[24px] sm:min-w-0 items-center justify-center border-l border-slate-700/50 ${
+                    className={`flex h-6 sm:h-7 flex-1 ${isMobile ? "min-w-[32px]" : "min-w-[24px]"} sm:min-w-0 items-center justify-center border-l border-slate-700/50 ${
                       isCurrent ? "bg-cyan-500/20 text-cyan-400" : "text-slate-500"
                     }`}
                   >
@@ -122,9 +191,6 @@ export const SynthPatternGrid: FC<Props> = ({
                   </div>
                 );
               })}
-            </div>
-            <div className="flex w-16 sm:w-24 items-center justify-center border-l border-slate-700/50 px-1 sm:px-2 text-[8px] sm:text-[9px] text-slate-400 shrink-0">
-              Note
             </div>
           </div>
 
@@ -146,17 +212,24 @@ export const SynthPatternGrid: FC<Props> = ({
                 midiNote={midiNote}
                 octave={octave}
                 onStepClick={handleStepClick}
+                visibleSteps={isMobile ? visibleSteps : []}
+                isMobile={isMobile}
               />
             );
           })}
         </div>
       </div>
 
-      {/* All Parameters in One Section */}
-      <div className="mt-4 rounded-lg border border-slate-700/50 bg-gradient-to-br from-slate-800/60 to-slate-900/40 backdrop-blur-sm p-3 sm:p-4 shadow-xl">
-        <div className="mb-3 font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] text-cyan-400/80 font-semibold">
-          FM Synthesis Parameters
-        </div>
+      {/* All Parameters in One Section - Collapsible on mobile, always visible on desktop */}
+      <div
+        className={`overflow-hidden mt-4 rounded-lg border border-slate-700/50 bg-gradient-to-br from-slate-800/60 to-slate-900/40 backdrop-blur-sm shadow-xl transition-all duration-300 ease-in-out ${
+          soundControlsOpen ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0 sm:max-h-[2000px] sm:opacity-100"
+        }`}
+      >
+        <div className="p-3 sm:p-4">
+          <div className="mb-3 font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] text-cyan-400/80 font-semibold">
+            FM Synthesis Parameters
+          </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6 justify-items-center">
           {/* Pitch Section */}
@@ -283,6 +356,7 @@ export const SynthPatternGrid: FC<Props> = ({
             />
           </div>
         </div>
+        </div>
       </div>
     </section>
   );
@@ -296,6 +370,8 @@ type SynthRowProps = {
   midiNote: number;
   octave: number;
   onStepClick: (row: number, col: number) => void;
+  visibleSteps: number[];
+  isMobile: boolean;
 };
 
 const SynthRow: FC<SynthRowProps> = ({
@@ -306,6 +382,8 @@ const SynthRow: FC<SynthRowProps> = ({
   midiNote,
   octave,
   onStepClick,
+  visibleSteps,
+  isMobile,
 }) => {
   // Determine if this is a black key (C#, D#, F#, G#, A#)
   const isBlackKey = [1, 3, 6, 8, 10].includes(rowIndex);
@@ -318,7 +396,8 @@ const SynthRow: FC<SynthRowProps> = ({
         <span className="truncate">{noteLabel}</span>
       </div>
       <div className="flex flex-1 min-w-0">
-        {rowSteps.map((step, col) => {
+        {(isMobile && visibleSteps.length > 0 ? visibleSteps : rowSteps.map((_, i) => i)).map((col) => {
+          const step = rowSteps[col];
           const isCurrent = col === currentStep;
           const isActive = step.active;
           // Check if the step's note matches the current row's note (same note name, any octave)
@@ -332,7 +411,7 @@ const SynthRow: FC<SynthRowProps> = ({
               key={col}
               type="button"
               onClick={() => onStepClick(rowIndex, col)}
-              className={`h-7 sm:h-8 flex-1 min-w-[24px] sm:min-w-0 border-l border-slate-700/50 transition-all ${
+              className={`h-7 sm:h-8 flex-1 ${isMobile ? "min-w-[32px]" : "min-w-[24px]"} sm:min-w-0 border-l border-slate-700/50 transition-all ${
                 isActive && noteMatches
                   ? isBlackKey
                     ? "bg-cyan-600/60 text-cyan-100 hover:bg-cyan-600/70"
@@ -348,11 +427,6 @@ const SynthRow: FC<SynthRowProps> = ({
             </button>
           );
         })}
-      </div>
-      <div className={`flex w-16 sm:w-24 items-center justify-center border-l border-slate-700/50 px-1 sm:px-2 bg-slate-800/30 shrink-0 ${
-        isBlackKey ? "bg-slate-800/40" : ""
-      }`}>
-        <span className="text-[8px] sm:text-[10px] text-slate-500 font-mono truncate">{noteLabel}</span>
       </div>
     </div>
   );
