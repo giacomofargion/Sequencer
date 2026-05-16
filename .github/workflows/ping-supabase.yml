@@ -13,62 +13,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the repository
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      # Step 2: Set up Node.js
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20" # Using Node.js 20 (LTS)
-
-      # Step 3: Install Supabase Client
-      - name: Install Supabase Client
-        run: npm install @supabase/supabase-js
-
-      # Step 4: Ping Supabase by querying the rooms table
+      # REST ping only — avoids @supabase/supabase-js Realtime/WebSocket on Node < 22
       - name: Ping Supabase
         env:
           SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
-          node -e "
-          (async () => {
-            try {
-              // Import Supabase client
-              const { createClient } = require('@supabase/supabase-js');
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "❌ Missing required secrets: NEXT_PUBLIC_SUPABASE_URL and/or SUPABASE_SERVICE_ROLE_KEY"
+            exit 1
+          fi
 
-              // Validate environment variables
-              if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-                throw new Error('Missing required environment variables: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY');
-              }
+          http_code=$(curl -sS -o /tmp/supabase-ping-body.json -w "%{http_code}" \
+            "${SUPABASE_URL}/rest/v1/rooms?select=id&limit=1" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}")
 
-              // Create Supabase client with service role key (bypasses RLS)
-              const supabase = createClient(
-                process.env.SUPABASE_URL,
-                process.env.SUPABASE_SERVICE_ROLE_KEY
-              );
+          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+            echo "❌ Error pinging Supabase: HTTP ${http_code}"
+            cat /tmp/supabase-ping-body.json
+            exit 1
+          fi
 
-              // Ping Supabase by querying the rooms table
-              // Using limit(1) to minimize data transfer
-              const { data, error } = await supabase
-                .from('rooms')
-                .select('id')
-                .limit(1);
-
-              // Handle errors
-              if (error) {
-                throw error;
-              }
-
-              // Log success
-              console.log('✅ Ping successful! Database is active.');
-              console.log('Query returned:', data ? data.length + ' row(s)' : 'no data');
-            } catch (err) {
-              // Log and exit with error
-              console.error('❌ Error pinging Supabase:', err.message);
-              process.exit(1);
-            }
-          })();
-          "
+          echo "✅ Ping successful! Database is active."
+          echo "Response: $(cat /tmp/supabase-ping-body.json)"
